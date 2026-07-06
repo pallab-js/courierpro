@@ -1,21 +1,33 @@
-//
-//  ContentView.swift
-//  courierpro
-//
-//  Created by Pallab Jyoti Sonowal on 06/07/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    @State private var selectedItem: NavigationItem? = .dashboard
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationSplitView {
+            SidebarView(selectedItem: $selectedItem)
+        } detail: {
+            switch selectedItem {
+            case .dashboard:
+                DashboardView()
+            case .parcels:
+                ParcelListView()
+            case .customers:
+                CustomerListView()
+            case .drivers:
+                DriverListView()
+            case .invoices:
+                InvoiceListView()
+            case .pricing:
+                PricingRuleListView()
+            case .reports:
+                ReportsView()
+            case .none:
+                Text("Select an item from the sidebar")
+                    .foregroundColor(.secondary)
+            }
         }
-        .padding()
+        .frame(minWidth: 800, minHeight: 600)
     }
 }
 

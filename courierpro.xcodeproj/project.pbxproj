@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		AABB0001000000000000000B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 774D94B92FFC15CA00FB8024 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 774D94C02FFC15CA00FB8024;
+			remoteInfo = courierpro;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		774D94C12FFC15CA00FB8024 /* courierpro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = courierpro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AABB00010000000000000001 /* courierproTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = courierproTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +27,22 @@
 			path = courierpro;
 			sourceTree = "<group>";
 		};
+		AABB00010000000000000002 /* courierproTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = courierproTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		774D94BE2FFC15CA00FB8024 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AABB00010000000000000005 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				774D94C32FFC15CA00FB8024 /* courierpro */,
+				AABB00010000000000000002 /* courierproTests */,
 				774D94C22FFC15CA00FB8024 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				774D94C12FFC15CA00FB8024 /* courierpro.app */,
+				AABB00010000000000000001 /* courierproTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,29 @@
 			productReference = 774D94C12FFC15CA00FB8024 /* courierpro.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AABB00010000000000000003 /* courierproTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AABB00010000000000000008 /* Build configuration list for PBXNativeTarget "courierproTests" */;
+			buildPhases = (
+				AABB00010000000000000004 /* Sources */,
+				AABB00010000000000000005 /* Frameworks */,
+				AABB00010000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AABB0001000000000000000A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AABB00010000000000000002 /* courierproTests */,
+			);
+			name = courierproTests;
+			packageProductDependencies = (
+			);
+			productName = courierproTests;
+			productReference = AABB00010000000000000001 /* courierproTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +130,10 @@
 				TargetAttributes = {
 					774D94C02FFC15CA00FB8024 = {
 						CreatedOnToolsVersion = 26.6;
+					};
+					AABB00010000000000000003 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = 774D94C02FFC15CA00FB8024;
 					};
 				};
 			};
@@ -100,12 +152,20 @@
 			projectRoot = "";
 			targets = (
 				774D94C02FFC15CA00FB8024 /* courierpro */,
+				AABB00010000000000000003 /* courierproTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		774D94BF2FFC15CA00FB8024 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AABB00010000000000000006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AABB00010000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AABB0001000000000000000A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 774D94C02FFC15CA00FB8024 /* courierpro */;
+			targetProxy = AABB0001000000000000000B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		774D94CA2FFC15CD00FB8024 /* Debug */ = {
@@ -303,6 +378,46 @@
 			};
 			name = Release;
 		};
+		AABB0001000000000000000C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = cms.courierproTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/courierpro.app/Contents/MacOS/courierpro";
+			};
+			name = Debug;
+		};
+		AABB0001000000000000000D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = cms.courierproTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/courierpro.app/Contents/MacOS/courierpro";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -320,6 +435,15 @@
 			buildConfigurations = (
 				774D94CD2FFC15CD00FB8024 /* Debug */,
 				774D94CE2FFC15CD00FB8024 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AABB00010000000000000008 /* Build configuration list for PBXNativeTarget "courierproTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AABB0001000000000000000C /* Debug */,
+				AABB0001000000000000000D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
