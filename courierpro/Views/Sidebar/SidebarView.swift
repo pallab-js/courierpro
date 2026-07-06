@@ -8,6 +8,7 @@ enum NavigationItem: String, CaseIterable, Identifiable {
     case invoices
     case pricing
     case reports
+    case map
 
     var id: String { rawValue }
 
@@ -20,6 +21,7 @@ enum NavigationItem: String, CaseIterable, Identifiable {
         case .invoices: return "Invoices"
         case .pricing: return "Pricing"
         case .reports: return "Reports"
+        case .map: return "Delivery Map"
         }
     }
 
@@ -32,6 +34,7 @@ enum NavigationItem: String, CaseIterable, Identifiable {
         case .invoices: return "doc.text.fill"
         case .pricing: return "dollarsign.circle.fill"
         case .reports: return "chart.pie.fill"
+        case .map: return "map.fill"
         }
     }
 }

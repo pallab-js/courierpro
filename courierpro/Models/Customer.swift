@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import CoreLocation
 
 @Model
 final class Customer {
@@ -10,6 +11,8 @@ final class Customer {
     var address: String
     var city: String
     var postalCode: String
+    var latitude: Double
+    var longitude: Double
     var createdAt: Date
     var updatedAt: Date
 
@@ -27,6 +30,8 @@ final class Customer {
         address: String = "",
         city: String = "",
         postalCode: String = "",
+        latitude: Double = 0,
+        longitude: Double = 0,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
@@ -37,6 +42,8 @@ final class Customer {
         self.address = address
         self.city = city
         self.postalCode = postalCode
+        self.latitude = latitude
+        self.longitude = longitude
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -50,5 +57,13 @@ final class Customer {
             return address
         }
         return "\(city) \(postalCode)".trimmingCharacters(in: .whitespaces)
+    }
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    var hasCoordinates: Bool {
+        latitude != 0 && longitude != 0
     }
 }

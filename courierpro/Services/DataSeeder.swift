@@ -13,11 +13,11 @@ final class DataSeeder {
         guard existingCustomers.isEmpty else { return }
 
         let customers = [
-            Customer(name: "Acme Corp", email: "info@acme.com", phone: "555-0101", address: "123 Business St", city: "San Francisco", postalCode: "94102"),
-            Customer(name: "TechStart Inc", email: "hello@techstart.io", phone: "555-0102", address: "456 Innovation Ave", city: "San Jose", postalCode: "95112"),
-            Customer(name: "Global Logistics", email: "ops@globallog.com", phone: "555-0103", address: "789 Shipping Blvd", city: "Oakland", postalCode: "94601"),
-            Customer(name: "Quick Deliver", email: "service@quickdel.com", phone: "555-0104", address: "321 Express Way", city: "Berkeley", postalCode: "94704"),
-            Customer(name: "Retail Plus", email: "orders@retailplus.com", phone: "555-0105", address: "654 Commerce Dr", city: "Palo Alto", postalCode: "94301"),
+            Customer(name: "Acme Corp", email: "info@acme.com", phone: "555-0101", address: "123 Business St", city: "San Francisco", postalCode: "94102", latitude: 37.7749, longitude: -122.4194),
+            Customer(name: "TechStart Inc", email: "hello@techstart.io", phone: "555-0102", address: "456 Innovation Ave", city: "San Jose", postalCode: "95112", latitude: 37.3382, longitude: -121.8863),
+            Customer(name: "Global Logistics", email: "ops@globallog.com", phone: "555-0103", address: "789 Shipping Blvd", city: "Oakland", postalCode: "94601", latitude: 37.8044, longitude: -122.2712),
+            Customer(name: "Quick Deliver", email: "service@quickdel.com", phone: "555-0104", address: "321 Express Way", city: "Berkeley", postalCode: "94704", latitude: 37.8716, longitude: -122.2727),
+            Customer(name: "Retail Plus", email: "orders@retailplus.com", phone: "555-0105", address: "654 Commerce Dr", city: "Palo Alto", postalCode: "94301", latitude: 37.4419, longitude: -122.1430),
         ]
 
         for customer in customers {

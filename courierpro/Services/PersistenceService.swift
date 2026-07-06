@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import CloudKit
 
 @MainActor
 final class PersistenceService {
@@ -11,8 +12,10 @@ final class PersistenceService {
 
     let modelContainer: ModelContainer
     let modelContext: ModelContext
+    private let isInMemory: Bool
 
     private init(isInMemory: Bool = false) {
+        self.isInMemory = isInMemory
         let schema = Schema([
             Parcel.self,
             Customer.self,
@@ -34,7 +37,7 @@ final class PersistenceService {
             config = ModelConfiguration(
                 "CourierProDatabase",
                 schema: schema,
-                isStoredInMemoryOnly: false
+                cloudKitDatabase: .automatic
             )
         }
 
@@ -44,6 +47,10 @@ final class PersistenceService {
         } catch {
             fatalError("Failed to initialize ModelContainer: \(error)")
         }
+    }
+
+    var isCloudKitAvailable: Bool {
+        !isInMemory && NSUbiquitousKeyValueStore.default.bool(forKey: "cloudKitAvailable")
     }
 
     func save() throws {
