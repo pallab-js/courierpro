@@ -6,6 +6,11 @@ struct DashboardView: View {
     @StateObject private var customerViewModel = CustomerViewModel()
     @StateObject private var driverViewModel = DriverViewModel()
     @StateObject private var invoiceViewModel = InvoiceViewModel()
+    @Environment(\.modelContext) private var modelContext
+
+    @State private var showingCreateParcel = false
+    @State private var showingCreateCustomer = false
+    @State private var showingCreateInvoice = false
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -18,29 +23,28 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: true) {
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 24) {
                 heroHeader
-                    .padding(.bottom, 24)
-
                 kpiSection
-                    .padding(.bottom, 24)
-
-                HStack(alignment: .top, spacing: 20) {
-                    statusDistributionCard
-                    revenueHighlightsCard
-                }
-                .padding(.bottom, 24)
-
-                recentParcelsSection
+                bottomSection
             }
-            .padding(28)
+            .padding(24)
         }
-        .background(Color(NSColor.controlBackgroundColor).opacity(0.3))
+        .background(Color(NSColor.windowBackgroundColor))
         .task {
             parcelViewModel.loadParcels()
             customerViewModel.loadCustomers()
             driverViewModel.loadDrivers()
             invoiceViewModel.loadInvoices()
+        }
+        .sheet(isPresented: $showingCreateParcel) {
+            ParcelFormView(viewModel: parcelViewModel)
+        }
+        .sheet(isPresented: $showingCreateCustomer) {
+            CustomerFormView(viewModel: customerViewModel)
+        }
+        .sheet(isPresented: $showingCreateInvoice) {
+            InvoiceFormView(viewModel: invoiceViewModel)
         }
     }
 
@@ -48,60 +52,51 @@ struct DashboardView: View {
 
     private var heroHeader: some View {
         HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(greeting)
-                    .font(.title3)
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
                 Text("CourierPro Dashboard")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
                 Text(Date().formatted(date: .complete, time: .omitted))
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundColor(.secondary)
             }
 
             Spacer()
 
-            HStack(spacing: 12) {
-                quickAction(
-                    title: "New Parcel",
-                    icon: "plus.circle.fill",
-                    color: .blue
-                )
-                quickAction(
-                    title: "New Customer",
-                    icon: "person.crop.circle.badge.plus",
-                    color: .orange
-                )
-                quickAction(
-                    title: "New Invoice",
-                    icon: "doc.text.badge.plus",
-                    color: .green
-                )
+            HStack(spacing: 10) {
+                quickAction(title: "New Parcel", icon: "shippingbox.fill", color: .blue) {
+                    showingCreateParcel = true
+                }
+                quickAction(title: "New Customer", icon: "person.fill.badge.plus", color: .orange) {
+                    showingCreateCustomer = true
+                }
+                quickAction(title: "New Invoice", icon: "doc.text.badge.plus", color: .green) {
+                    showingCreateInvoice = true
+                }
             }
         }
-        .padding(24)
+        .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
         )
     }
 
-    private func quickAction(title: String, icon: String, color: Color) -> some View {
-        Button(action: {}) {
-            VStack(spacing: 6) {
+    private func quickAction(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundColor(color)
+                    .font(.title3)
                 Text(title)
                     .font(.caption2)
-                    .foregroundColor(.secondary)
             }
-            .frame(width: 80)
-            .padding(.vertical, 10)
+            .frame(width: 80, height: 52)
+            .foregroundColor(color)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(color.opacity(0.08))
+                    .fill(color.opacity(0.1))
             )
         }
         .buttonStyle(.plain)
@@ -110,72 +105,78 @@ struct DashboardView: View {
     // MARK: - KPI Section
 
     private var kpiSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Key Metrics")
                 .font(.headline)
-                .foregroundColor(.primary)
 
             LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: 16),
-                GridItem(.flexible(), spacing: 16),
-                GridItem(.flexible(), spacing: 16),
-                GridItem(.flexible(), spacing: 16)
-            ], spacing: 16) {
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12)
+            ], spacing: 12) {
                 KPICard(
                     title: "Total Parcels",
                     value: "\(parcelViewModel.parcels.count)",
                     icon: "shippingbox.fill",
                     gradient: LinearGradient(
-                        colors: [Color.blue, Color.blue.opacity(0.7)],
+                        colors: [.blue, .blue.opacity(0.7)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
-                    ),
-                    trend: nil
+                    )
                 )
-
                 KPICard(
                     title: "In Transit",
                     value: "\(parcelViewModel.parcels.filter { $0.status == .inTransit }.count)",
                     icon: "truck.fill",
                     gradient: LinearGradient(
-                        colors: [Color.purple, Color.purple.opacity(0.7)],
+                        colors: [.purple, .purple.opacity(0.7)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
-                    ),
-                    trend: nil
+                    )
                 )
-
                 KPICard(
                     title: "Delivered",
                     value: "\(parcelViewModel.parcels.filter { $0.status == .delivered }.count)",
                     icon: "checkmark.circle.fill",
                     gradient: LinearGradient(
-                        colors: [Color.green, Color.green.opacity(0.7)],
+                        colors: [.green, .green.opacity(0.7)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
-                    ),
-                    trend: nil
+                    )
                 )
-
                 KPICard(
                     title: "Revenue",
                     value: String(format: "$%.0f", invoiceViewModel.totalRevenue),
                     icon: "dollarsign.circle.fill",
                     gradient: LinearGradient(
-                        colors: [Color.orange, Color.orange.opacity(0.7)],
+                        colors: [.orange, .orange.opacity(0.7)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
-                    ),
-                    trend: nil
+                    )
                 )
             }
         }
     }
 
-    // MARK: - Status Distribution & Revenue Highlights
+    // MARK: - Bottom Section
+
+    private var bottomSection: some View {
+        VStack(spacing: 16) {
+            HStack(alignment: .top, spacing: 16) {
+                statusDistributionCard
+                    .frame(minWidth: 320)
+                revenueHighlightsCard
+                    .frame(minWidth: 280)
+            }
+            recentParcelsCard
+        }
+    }
+
+    // MARK: - Status Distribution
 
     private var statusDistributionCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("Delivery Status")
                     .font(.headline)
@@ -186,136 +187,79 @@ struct DashboardView: View {
             }
 
             if parcelViewModel.parcels.isEmpty {
-                emptyStatusCard
+                emptyState(message: "No parcels yet")
             } else {
                 statusDistribution
             }
         }
-        .padding(20)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color(NSColor.controlBackgroundColor))
-                .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
-        )
-    }
-
-    private var emptyStatusCard: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "chart.bar")
-                .font(.system(size: 32))
-                .foregroundColor(.secondary.opacity(0.5))
-            Text("No data yet")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 180)
+        .padding(16)
+        .background(cardBackground)
     }
 
     private var statusDistribution: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             ForEach(DeliveryStatus.allCases) { status in
                 let count = parcelViewModel.parcels.filter { $0.status == status }.count
                 let total = parcelViewModel.parcels.count
-                let percentage = total > 0 ? CGFloat(count) / CGFloat(total) : 0
+                let pct = total > 0 ? CGFloat(count) / CGFloat(total) : 0
 
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
                     Image(systemName: status.systemImage)
+                        .font(.caption)
                         .foregroundColor(statusColor(status))
-                        .frame(width: 20)
+                        .frame(width: 16)
 
                     Text(status.displayName)
-                        .font(.subheadline)
-                        .frame(width: 100, alignment: .leading)
+                        .font(.caption)
+                        .frame(width: 90, alignment: .leading)
 
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.gray.opacity(0.15))
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(statusColor(status).gradient)
-                                .frame(width: geo.size.width * percentage)
+                            Capsule()
+                                .fill(Color.gray.opacity(0.12))
+                            Capsule()
+                                .fill(statusColor(status))
+                                .frame(width: geo.size.width * pct)
                         }
                     }
-                    .frame(height: 8)
+                    .frame(height: 6)
 
                     Text("\(count)")
-                        .font(.caption)
+                        .font(.caption2)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
-                        .frame(width: 30, alignment: .trailing)
+                        .frame(width: 24, alignment: .trailing)
                 }
             }
         }
     }
 
+    // MARK: - Revenue Highlights
+
     private var revenueHighlightsCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Financial Overview")
-                    .font(.headline)
-                Spacer()
-            }
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Financial Overview")
+                .font(.headline)
 
-            revenueRow(
-                title: "Total Revenue",
-                value: String(format: "$%.2f", invoiceViewModel.totalRevenue),
-                icon: "dollarsign.circle.fill",
-                color: .green
-            )
-
-            revenueRow(
-                title: "Pending",
-                value: String(format: "$%.2f", invoiceViewModel.pendingAmount),
-                icon: "clock.fill",
-                color: .orange
-            )
-
-            revenueRow(
-                title: "Overdue",
-                value: String(format: "$%.2f", invoiceViewModel.overdueAmount),
-                icon: "exclamationmark.triangle.fill",
-                color: .red
-            )
+            revenueRow(title: "Revenue", value: String(format: "$%.2f", invoiceViewModel.totalRevenue), icon: "dollarsign.circle.fill", color: .green)
+            revenueRow(title: "Pending", value: String(format: "$%.2f", invoiceViewModel.pendingAmount), icon: "clock.fill", color: .orange)
+            revenueRow(title: "Overdue", value: String(format: "$%.2f", invoiceViewModel.overdueAmount), icon: "exclamationmark.triangle.fill", color: .red)
 
             Divider()
-                .padding(.vertical, 4)
 
-            HStack {
-                Text("Active Drivers")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("\(driverViewModel.availableDrivers.count) available / \(driverViewModel.drivers.count) total")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-            }
-
-            HStack {
-                Text("Total Customers")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("\(customerViewModel.customers.count)")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-            }
+            infoRow(label: "Active Drivers", value: "\(driverViewModel.availableDrivers.count) / \(driverViewModel.drivers.count)")
+            infoRow(label: "Customers", value: "\(customerViewModel.customers.count)")
+            infoRow(label: "Invoices", value: "\(invoiceViewModel.invoices.count)")
         }
-        .padding(20)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color(NSColor.controlBackgroundColor))
-                .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
-        )
+        .padding(16)
+        .background(cardBackground)
     }
 
     private func revenueRow(title: String, value: String, icon: String, color: Color) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Image(systemName: icon)
                 .foregroundColor(color)
-                .frame(width: 20)
+                .frame(width: 16)
             Text(title)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -326,125 +270,145 @@ struct DashboardView: View {
         }
     }
 
+    private func infoRow(label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Spacer()
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+    }
+
     // MARK: - Recent Parcels
 
-    private var recentParcelsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Recent Parcels")
-                    .font(.headline)
-                Spacer()
-                Button("View All") {}
-                    .font(.subheadline)
-                    .buttonStyle(.plain)
-                    .foregroundColor(.accentColor)
-            }
+    private var recentParcelsCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Recent Parcels")
+                .font(.headline)
 
             if parcelViewModel.parcels.isEmpty {
-                EmptyStateView(
-                    icon: "shippingbox",
-                    title: "No Parcels Yet",
-                    message: "Create your first parcel to start tracking deliveries"
-                )
-                .frame(height: 150)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color(NSColor.controlBackgroundColor))
-                )
+                emptyState(message: "No parcels yet")
             } else {
-                recentParcelsTable
+                ScrollView(.horizontal, showsIndicators: false) {
+                    recentParcelsTable
+                        .frame(minWidth: 700)
+                }
             }
         }
+        .padding(16)
+        .background(cardBackground)
     }
 
     private var recentParcelsTable: some View {
         VStack(spacing: 0) {
-            tableHeader
+            HStack(spacing: 0) {
+                tableCell("TRACKING", width: 140, alignment: .leading)
+                tableCell("STATUS", width: 100, alignment: .center)
+                tableCell("FROM", width: 120, alignment: .leading)
+                tableCell("TO", width: 120, alignment: .leading)
+                tableCell("DRIVER", width: 110, alignment: .leading)
+                tableCell("DATE", width: 90, alignment: .trailing)
+                tableCell("WEIGHT", width: 70, alignment: .trailing)
+            }
+            .font(.caption)
+            .fontWeight(.semibold)
+            .foregroundColor(.secondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(NSColor.controlBackgroundColor))
 
-            ForEach(Array(parcelViewModel.parcels.prefix(8).enumerated()), id: \.element.id) { index, parcel in
+            ForEach(Array(parcelViewModel.parcels.prefix(6).enumerated()), id: \.element.id) { index, parcel in
                 parcelRow(parcel, isEven: index.isMultiple(of: 2))
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.gray.opacity(0.15), lineWidth: 1)
+        )
     }
 
-    private var tableHeader: some View {
-        HStack(spacing: 0) {
-            Text("TRACKING NUMBER")
-                .frame(width: 160, alignment: .leading)
-            Text("STATUS")
-                .frame(width: 120, alignment: .center)
-            Text("FROM")
-                .frame(width: 140, alignment: .leading)
-            Text("TO")
-                .frame(width: 140, alignment: .leading)
-            Text("DRIVER")
-                .frame(width: 120, alignment: .leading)
-            Text("DATE")
-                .frame(width: 100, alignment: .trailing)
-            Text("WEIGHT")
-                .frame(width: 80, alignment: .trailing)
-        }
-        .font(.caption)
-        .fontWeight(.semibold)
-        .foregroundColor(.secondary)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(Color(NSColor.controlBackgroundColor))
+    private func tableCell(_ text: String, width: CGFloat, alignment: Alignment) -> some View {
+        Text(text)
+            .frame(width: width, alignment: alignment)
     }
 
     private func parcelRow(_ parcel: Parcel, isEven: Bool) -> some View {
         HStack(spacing: 0) {
             Text(parcel.trackingNumber)
-                .font(.system(.subheadline, design: .monospaced))
+                .font(.system(.caption, design: .monospaced))
                 .fontWeight(.medium)
-                .frame(width: 160, alignment: .leading)
+                .frame(width: 140, alignment: .leading)
 
-            HStack(spacing: 4) {
-                Image(systemName: parcel.status.systemImage)
-                    .font(.caption)
+            HStack(spacing: 3) {
+                Circle()
+                    .fill(statusColor(parcel.status))
+                    .frame(width: 5, height: 5)
                 Text(parcel.status.displayName)
             }
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(statusColor(parcel.status).opacity(0.15))
+            .font(.caption2)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(statusColor(parcel.status).opacity(0.1))
             .foregroundColor(statusColor(parcel.status))
-            .cornerRadius(6)
-            .frame(width: 120, alignment: .center)
+            .cornerRadius(4)
+            .frame(width: 100, alignment: .center)
 
             Text(parcel.senderName)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .frame(width: 140, alignment: .leading)
-                .lineLimit(1)
-
-            Text(parcel.receiverName)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .frame(width: 140, alignment: .leading)
-                .lineLimit(1)
-
-            Text(parcel.driverName)
-                .font(.subheadline)
+                .font(.caption)
                 .foregroundColor(.secondary)
                 .frame(width: 120, alignment: .leading)
                 .lineLimit(1)
 
-            Text(parcel.createdAt, style: .date)
+            Text(parcel.receiverName)
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .frame(width: 100, alignment: .trailing)
+                .frame(width: 120, alignment: .leading)
+                .lineLimit(1)
+
+            Text(parcel.driverName)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .frame(width: 110, alignment: .leading)
+                .lineLimit(1)
+
+            Text(parcel.createdAt, style: .date)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .frame(width: 90, alignment: .trailing)
 
             Text(String(format: "%.1f kg", parcel.weight))
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .frame(width: 70, alignment: .trailing)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(isEven ? Color(NSColor.controlBackgroundColor).opacity(0.4) : Color.clear)
+    }
+
+    // MARK: - Helpers
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 10)
+            .fill(Color(NSColor.controlBackgroundColor))
+            .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
+    }
+
+    private func emptyState(message: String) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: "tray")
+                .font(.title2)
+                .foregroundColor(.secondary.opacity(0.5))
+            Text(message)
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .frame(width: 80, alignment: .trailing)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(isEven ? Color(NSColor.controlBackgroundColor).opacity(0.3) : Color.clear)
+        .frame(maxWidth: .infinity)
+        .frame(height: 120)
     }
 
     private func statusColor(_ status: DeliveryStatus) -> Color {
@@ -459,50 +423,34 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - KPI Card Component
+// MARK: - KPI Card
 
 struct KPICard: View {
     let title: String
     let value: String
     let icon: String
     let gradient: LinearGradient
-    var trend: Double? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: icon)
                     .font(.title3)
                     .foregroundColor(.white.opacity(0.9))
                 Spacer()
             }
-
             Text(value)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(.system(size: 26, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
-
-            HStack(spacing: 4) {
-                Text(title)
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
-
-                if let trend = trend {
-                    Spacer()
-                    HStack(spacing: 2) {
-                        Image(systemName: trend >= 0 ? "arrow.up" : "arrow.down")
-                            .font(.caption2)
-                        Text(String(format: "%.1f%%", abs(trend)))
-                            .font(.caption2)
-                    }
-                    .foregroundColor(.white.opacity(0.9))
-                }
-            }
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.85))
         }
-        .padding(16)
+        .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(gradient)
-                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+                .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
         )
     }
 }
