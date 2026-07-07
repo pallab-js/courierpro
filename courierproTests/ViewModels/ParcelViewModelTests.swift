@@ -18,16 +18,16 @@ final class ParcelViewModelTests: XCTestCase {
         super.tearDown()
     }
 
-    func testLoadParcelsEmpty() throws {
-        try viewModel.loadParcels()
+    func testLoadParcelsEmpty() {
+        viewModel.loadParcels()
         XCTAssertTrue(viewModel.parcels.isEmpty)
     }
 
-    func testCreateParcel() throws {
+    func testCreateParcel() {
         let sender = Customer(name: "Sender")
         let receiver = Customer(name: "Receiver")
 
-        try viewModel.createParcel(
+        viewModel.createParcel(
             sender: sender,
             receiver: receiver,
             weight: 2.0,
@@ -40,11 +40,11 @@ final class ParcelViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.parcels.first?.receiverName, "Receiver")
     }
 
-    func testUpdateParcelStatus() throws {
+    func testUpdateParcelStatus() {
         let sender = Customer(name: "Sender")
         let receiver = Customer(name: "Receiver")
 
-        try viewModel.createParcel(
+        viewModel.createParcel(
             sender: sender,
             receiver: receiver,
             weight: 2.0,
@@ -53,16 +53,16 @@ final class ParcelViewModelTests: XCTestCase {
         )
 
         let parcel = viewModel.parcels.first!
-        try viewModel.updateParcelStatus(parcel, status: .inTransit)
+        viewModel.updateParcelStatus(parcel, status: .inTransit)
 
         XCTAssertEqual(viewModel.parcels.first?.status, .inTransit)
     }
 
-    func testDeleteParcel() throws {
+    func testDeleteParcel() {
         let sender = Customer(name: "Sender")
         let receiver = Customer(name: "Receiver")
 
-        try viewModel.createParcel(
+        viewModel.createParcel(
             sender: sender,
             receiver: receiver,
             weight: 2.0,
@@ -73,16 +73,16 @@ final class ParcelViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.parcels.count, 1)
 
         let parcel = viewModel.parcels.first!
-        try viewModel.deleteParcel(parcel)
+        viewModel.deleteParcel(parcel)
 
         XCTAssertEqual(viewModel.parcels.count, 0)
     }
 
-    func testFilteredParcels() throws {
+    func testFilteredParcels() {
         let sender = Customer(name: "Sender")
         let receiver = Customer(name: "Receiver")
 
-        try viewModel.createParcel(
+        viewModel.createParcel(
             sender: sender,
             receiver: receiver,
             weight: 2.0,
@@ -97,11 +97,11 @@ final class ParcelViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.filteredParcels.count, 0)
     }
 
-    func testParcelCountByStatus() throws {
+    func testParcelCountByStatus() {
         let sender = Customer(name: "Sender")
         let receiver = Customer(name: "Receiver")
 
-        try viewModel.createParcel(
+        viewModel.createParcel(
             sender: sender,
             receiver: receiver,
             weight: 2.0,

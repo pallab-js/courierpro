@@ -21,7 +21,8 @@ final class PersistenceService {
             Invoice.self,
             InvoiceItem.self,
             Payment.self,
-            PricingRule.self
+            PricingRule.self,
+            RecurringInvoice.self
         ])
 
         let config: ModelConfiguration

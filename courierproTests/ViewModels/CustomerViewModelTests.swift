@@ -18,13 +18,13 @@ final class CustomerViewModelTests: XCTestCase {
         super.tearDown()
     }
 
-    func testLoadCustomersEmpty() throws {
-        try viewModel.loadCustomers()
+    func testLoadCustomersEmpty() {
+        viewModel.loadCustomers()
         XCTAssertTrue(viewModel.customers.isEmpty)
     }
 
-    func testCreateCustomer() throws {
-        try viewModel.createCustomer(
+    func testCreateCustomer() {
+        viewModel.createCustomer(
             name: "Acme Corp",
             email: "info@acme.com",
             phone: "555-0101",
@@ -38,8 +38,8 @@ final class CustomerViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.customers.first?.email, "info@acme.com")
     }
 
-    func testUpdateCustomer() throws {
-        try viewModel.createCustomer(
+    func testUpdateCustomer() {
+        viewModel.createCustomer(
             name: "Acme Corp",
             email: "info@acme.com",
             phone: "555-0101",
@@ -49,7 +49,7 @@ final class CustomerViewModelTests: XCTestCase {
         )
 
         let customer = viewModel.customers.first!
-        try viewModel.updateCustomer(
+        viewModel.updateCustomer(
             customer,
             name: "Acme Corporation",
             email: "updated@acme.com",
@@ -63,8 +63,8 @@ final class CustomerViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.customers.first?.email, "updated@acme.com")
     }
 
-    func testDeleteCustomer() throws {
-        try viewModel.createCustomer(
+    func testDeleteCustomer() {
+        viewModel.createCustomer(
             name: "Acme Corp",
             email: "info@acme.com",
             phone: "555-0101",
@@ -76,13 +76,13 @@ final class CustomerViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.customers.count, 1)
 
         let customer = viewModel.customers.first!
-        try viewModel.deleteCustomer(customer)
+        viewModel.deleteCustomer(customer)
 
         XCTAssertEqual(viewModel.customers.count, 0)
     }
 
-    func testFilteredCustomers() throws {
-        try viewModel.createCustomer(
+    func testFilteredCustomers() {
+        viewModel.createCustomer(
             name: "Acme Corp",
             email: "info@acme.com",
             phone: "555-0101",
@@ -91,7 +91,7 @@ final class CustomerViewModelTests: XCTestCase {
             postalCode: "94102"
         )
 
-        try viewModel.createCustomer(
+        viewModel.createCustomer(
             name: "TechStart Inc",
             email: "hello@techstart.io",
             phone: "555-0102",
