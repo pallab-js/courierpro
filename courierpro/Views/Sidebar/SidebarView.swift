@@ -46,21 +46,119 @@ enum NavigationItem: String, CaseIterable, Identifiable {
         case .settings: return "gear"
         }
     }
+
+    var section: SidebarSection {
+        switch self {
+        case .dashboard: return .main
+        case .parcels, .customers, .drivers, .driverSchedule: return .operations
+        case .invoices, .recurringInvoices, .pricing: return .billing
+        case .reports, .map: return .analytics
+        case .settings: return .system
+        }
+    }
+}
+
+enum SidebarSection: String, CaseIterable {
+    case main = "MAIN"
+    case operations = "OPERATIONS"
+    case billing = "BILLING"
+    case analytics = "ANALYTICS"
+    case system = "SYSTEM"
 }
 
 struct SidebarView: View {
     @Binding var selectedItem: NavigationItem?
 
     var body: some View {
-        List(NavigationItem.allCases, selection: $selectedItem) { item in
-            Label(item.displayName, systemImage: item.systemImage)
-                .tag(item)
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 0) {
+                sidebarHeader
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 20)
+
+                ForEach(SidebarSection.allCases, id: \.self) { section in
+                    sectionView(section)
+                }
+            }
+            .padding(.bottom, 16)
         }
-        .navigationTitle("CourierPro")
+    }
+
+    private var sidebarHeader: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.blue, Color.purple],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 32, height: 32)
+
+                Image(systemName: "shippingbox.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("CourierPro")
+                    .font(.system(.headline, design: .rounded))
+                Text("v1.0")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+        }
+    }
+
+    private func sectionView(_ section: SidebarSection) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(section.rawValue)
+                .font(.system(.caption2, weight: .semibold))
+                .foregroundColor(.secondary.opacity(0.6))
+                .tracking(0.8)
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 6)
+
+            ForEach(NavigationItem.allCases.filter { $0.section == section }) { item in
+                sidebarRow(item)
+            }
+        }
+    }
+
+    private func sidebarRow(_ item: NavigationItem) -> some View {
+        Button(action: { selectedItem = item }) {
+            HStack(spacing: 10) {
+                Image(systemName: item.systemImage)
+                    .font(.system(size: 14))
+                    .frame(width: 20)
+                    .foregroundColor(selectedItem == item ? .accentColor : .secondary)
+
+                Text(item.displayName)
+                    .font(.system(.subheadline, weight: selectedItem == item ? .semibold : .regular))
+                    .foregroundColor(selectedItem == item ? .primary : .secondary)
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(selectedItem == item ? Color.accentColor.opacity(0.1) : Color.clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 8)
     }
 }
 
 #Preview {
     SidebarView(selectedItem: .constant(.dashboard))
-        .frame(width: 200)
+        .frame(width: 220)
 }
