@@ -117,9 +117,12 @@ struct DashboardView: View {
                     .padding(.top)
 
                 if parcelViewModel.parcels.isEmpty {
-                    Text("No parcels yet. Create your first parcel!")
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, minHeight: 100)
+                    EmptyStateView(
+                        icon: "shippingbox",
+                        title: "No Parcels Yet",
+                        message: "Create your first parcel to start tracking deliveries"
+                    )
+                    .frame(height: 150)
                 } else {
                     ForEach(parcelViewModel.parcels.prefix(5)) { parcel in
                         HStack {
@@ -143,10 +146,10 @@ struct DashboardView: View {
             .padding()
         }
         .task {
-            try? parcelViewModel.loadParcels()
-            try? customerViewModel.loadCustomers()
-            try? driverViewModel.loadDrivers()
-            try? invoiceViewModel.loadInvoices()
+            parcelViewModel.loadParcels()
+            customerViewModel.loadCustomers()
+            driverViewModel.loadDrivers()
+            invoiceViewModel.loadInvoices()
         }
     }
 

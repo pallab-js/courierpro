@@ -8,6 +8,9 @@ final class CustomerViewModel: ObservableObject {
 
     @Published var customers: [Customer] = []
     @Published var searchText: String = ""
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    @Published var showError = false
 
     init(persistenceService: PersistenceService? = nil) {
         self.persistenceService = persistenceService ?? PersistenceService.shared
@@ -24,9 +27,16 @@ final class CustomerViewModel: ObservableObject {
         }
     }
 
-    func loadCustomers() throws {
-        let descriptor = FetchDescriptor<Customer>(sortBy: [SortDescriptor(\.name)])
-        customers = try persistenceService.fetch(descriptor)
+    func loadCustomers() {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let descriptor = FetchDescriptor<Customer>(sortBy: [SortDescriptor(\.name)])
+            customers = try persistenceService.fetch(descriptor)
+        } catch {
+            errorMessage = "Failed to load customers: \(error.localizedDescription)"
+            showError = true
+        }
     }
 
     func createCustomer(
@@ -36,18 +46,23 @@ final class CustomerViewModel: ObservableObject {
         address: String,
         city: String,
         postalCode: String
-    ) throws {
-        let customer = Customer(
-            name: name,
-            email: email,
-            phone: phone,
-            address: address,
-            city: city,
-            postalCode: postalCode
-        )
-        persistenceService.insert(customer)
-        try persistenceService.save()
-        try loadCustomers()
+    ) {
+        do {
+            let customer = Customer(
+                name: name,
+                email: email,
+                phone: phone,
+                address: address,
+                city: city,
+                postalCode: postalCode
+            )
+            persistenceService.insert(customer)
+            try persistenceService.save()
+            loadCustomers()
+        } catch {
+            errorMessage = "Failed to create customer: \(error.localizedDescription)"
+            showError = true
+        }
     }
 
     func updateCustomer(
@@ -58,21 +73,31 @@ final class CustomerViewModel: ObservableObject {
         address: String,
         city: String,
         postalCode: String
-    ) throws {
-        customer.name = name
-        customer.email = email
-        customer.phone = phone
-        customer.address = address
-        customer.city = city
-        customer.postalCode = postalCode
-        customer.updatedAt = Date()
-        try persistenceService.save()
-        try loadCustomers()
+    ) {
+        do {
+            customer.name = name
+            customer.email = email
+            customer.phone = phone
+            customer.address = address
+            customer.city = city
+            customer.postalCode = postalCode
+            customer.updatedAt = Date()
+            try persistenceService.save()
+            loadCustomers()
+        } catch {
+            errorMessage = "Failed to update customer: \(error.localizedDescription)"
+            showError = true
+        }
     }
 
-    func deleteCustomer(_ customer: Customer) throws {
-        persistenceService.delete(customer)
-        try persistenceService.save()
-        try loadCustomers()
+    func deleteCustomer(_ customer: Customer) {
+        do {
+            persistenceService.delete(customer)
+            try persistenceService.save()
+            loadCustomers()
+        } catch {
+            errorMessage = "Failed to delete customer: \(error.localizedDescription)"
+            showError = true
+        }
     }
 }

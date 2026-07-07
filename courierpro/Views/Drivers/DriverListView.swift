@@ -32,19 +32,18 @@ struct DriverListView: View {
 
             Divider()
 
-            if viewModel.filteredDrivers.isEmpty {
-                VStack {
-                    Image(systemName: "car.fill")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-                    Text("No drivers found")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                    Text("Add your first driver to get started")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if viewModel.isLoading {
+                LoadingView()
+            } else if viewModel.filteredDrivers.isEmpty {
+                EmptyStateView(
+                    icon: "car.fill",
+                    title: viewModel.drivers.isEmpty ? "No Drivers Yet" : "No Drivers Found",
+                    message: viewModel.drivers.isEmpty
+                        ? "Add your first driver to start assigning deliveries"
+                        : "Try adjusting your search criteria",
+                    actionTitle: viewModel.drivers.isEmpty ? "Add Driver" : nil,
+                    action: viewModel.drivers.isEmpty ? { showingCreateSheet = true } : nil
+                )
             } else {
                 List {
                     ForEach(viewModel.filteredDrivers) { driver in
@@ -56,11 +55,11 @@ struct DriverListView: View {
                                 viewingDriver = driver
                             }
                             Button(driver.isAvailable ? "Mark Unavailable" : "Mark Available") {
-                                try? viewModel.toggleAvailability(driver)
+                                viewModel.toggleAvailability(driver)
                             }
                             Divider()
                             Button("Delete", role: .destructive) {
-                                try? viewModel.deleteDriver(driver)
+                                viewModel.deleteDriver(driver)
                             }
                         }
                     }
@@ -68,7 +67,7 @@ struct DriverListView: View {
             }
         }
         .task {
-            try? viewModel.loadDrivers()
+            viewModel.loadDrivers()
         }
         .sheet(isPresented: $showingCreateSheet) {
             DriverFormView(viewModel: viewModel)
@@ -76,6 +75,7 @@ struct DriverListView: View {
         .sheet(item: $viewingDriver) { driver in
             DriverDetailView(driver: driver)
         }
+        .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
     }
 }
 

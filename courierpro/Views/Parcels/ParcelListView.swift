@@ -35,19 +35,18 @@ struct ParcelListView: View {
 
             Divider()
 
-            if viewModel.filteredParcels.isEmpty {
-                VStack {
-                    Image(systemName: "shippingbox")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-                    Text("No parcels found")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                    Text("Create your first parcel to get started")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if viewModel.isLoading {
+                LoadingView()
+            } else if viewModel.filteredParcels.isEmpty {
+                EmptyStateView(
+                    icon: "shippingbox",
+                    title: viewModel.parcels.isEmpty ? "No Parcels Yet" : "No Parcels Found",
+                    message: viewModel.parcels.isEmpty
+                        ? "Create your first parcel to start tracking deliveries"
+                        : "Try adjusting your search or filter criteria",
+                    actionTitle: viewModel.parcels.isEmpty ? "Create Parcel" : nil,
+                    action: viewModel.parcels.isEmpty ? { showingCreateSheet = true } : nil
+                )
             } else {
                 List {
                     ForEach(viewModel.filteredParcels) { parcel in
@@ -59,17 +58,17 @@ struct ParcelListView: View {
                                 viewingParcel = parcel
                             }
                             Button("Mark as Picked Up") {
-                                try? viewModel.updateParcelStatus(parcel, status: .pickedUp)
+                                viewModel.updateParcelStatus(parcel, status: .pickedUp)
                             }
                             Button("Mark as In Transit") {
-                                try? viewModel.updateParcelStatus(parcel, status: .inTransit)
+                                viewModel.updateParcelStatus(parcel, status: .inTransit)
                             }
                             Button("Mark as Delivered") {
-                                try? viewModel.updateParcelStatus(parcel, status: .delivered)
+                                viewModel.updateParcelStatus(parcel, status: .delivered)
                             }
                             Divider()
                             Button("Delete", role: .destructive) {
-                                try? viewModel.deleteParcel(parcel)
+                                viewModel.deleteParcel(parcel)
                             }
                         }
                     }
@@ -77,7 +76,7 @@ struct ParcelListView: View {
             }
         }
         .task {
-            try? viewModel.loadParcels()
+            viewModel.loadParcels()
         }
         .sheet(isPresented: $showingCreateSheet) {
             ParcelFormView(viewModel: viewModel)
@@ -85,6 +84,7 @@ struct ParcelListView: View {
         .sheet(item: $viewingParcel) { parcel in
             ParcelDetailView(parcel: parcel)
         }
+        .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
     }
 }
 

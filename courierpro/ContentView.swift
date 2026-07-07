@@ -26,14 +26,20 @@ struct ContentView: View {
                 CustomerListView()
             case .drivers:
                 DriverListView()
+            case .driverSchedule:
+                DriverScheduleView()
             case .invoices:
                 InvoiceListView()
+            case .recurringInvoices:
+                RecurringInvoiceListView()
             case .pricing:
                 PricingRuleListView()
             case .reports:
                 ReportsView()
             case .map:
                 DeliveryMapView()
+            case .settings:
+                SettingsView()
             case .none:
                 Text("Select an item from the sidebar")
                     .foregroundColor(.secondary)

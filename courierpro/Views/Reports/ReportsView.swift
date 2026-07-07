@@ -6,6 +6,11 @@ struct ReportsView: View {
     @StateObject private var driverViewModel = DriverViewModel()
     @StateObject private var invoiceViewModel = InvoiceViewModel()
     @State private var selectedReport: ReportType = .overview
+    @State private var dateRange: ClosedRange<Date>?
+    @State private var showingDatePicker = false
+    @State private var startDate = Date()
+    @State private var endDate = Date()
+    @State private var exportedURL: URL?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -14,6 +19,17 @@ struct ReportsView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 Spacer()
+                Button(action: { showingDatePicker = true }) {
+                    Label("Date Range", systemImage: "calendar")
+                }
+                if dateRange != nil {
+                    Button(action: { dateRange = nil }) {
+                        Label("Clear Filter", systemImage: "xmark.circle")
+                    }
+                }
+                Button(action: exportCurrentReport) {
+                    Label("Export CSV", systemImage: "square.and.arrow.up")
+                }
                 Picker("Report", selection: $selectedReport) {
                     ForEach(ReportType.allCases) { report in
                         Text(report.displayName).tag(report)
@@ -26,28 +42,110 @@ struct ReportsView: View {
 
             Divider()
 
+            if let range = dateRange {
+                HStack {
+                    Image(systemName: "calendar")
+                        .foregroundColor(.blue)
+                    Text("Filtered: \(range.lowerBound.formatted(date: .abbreviated, time: .omitted)) - \(range.upperBound.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                Divider()
+            }
+
             switch selectedReport {
             case .overview:
                 OverviewReportView(
                     parcelViewModel: parcelViewModel,
                     customerViewModel: customerViewModel,
                     driverViewModel: driverViewModel,
-                    invoiceViewModel: invoiceViewModel
+                    invoiceViewModel: invoiceViewModel,
+                    dateRange: dateRange
                 )
             case .revenue:
-                RevenueReportView(invoiceViewModel: invoiceViewModel)
+                RevenueReportView(invoiceViewModel: invoiceViewModel, dateRange: dateRange)
             case .deliveries:
-                DeliveryReportView(parcelViewModel: parcelViewModel)
+                DeliveryReportView(parcelViewModel: parcelViewModel, dateRange: dateRange)
             case .drivers:
-                DriverReportView(driverViewModel: driverViewModel, parcelViewModel: parcelViewModel)
+                DriverReportView(driverViewModel: driverViewModel, parcelViewModel: parcelViewModel, dateRange: dateRange)
             }
         }
         .task {
-            try? parcelViewModel.loadParcels()
-            try? customerViewModel.loadCustomers()
-            try? driverViewModel.loadDrivers()
-            try? invoiceViewModel.loadInvoices()
+            parcelViewModel.loadParcels()
+            customerViewModel.loadCustomers()
+            driverViewModel.loadDrivers()
+            invoiceViewModel.loadInvoices()
         }
+        .sheet(isPresented: $showingDatePicker) {
+            DateRangePicker(startDate: $startDate, endDate: $endDate) { range in
+                dateRange = range
+            }
+        }
+        .alert("Export Complete", isPresented: .constant(exportedURL != nil)) {
+            Button("OK") { exportedURL = nil }
+        } message: {
+            if let url = exportedURL {
+                Text("Report saved to:\n\(url.lastPathComponent)")
+            }
+        }
+    }
+
+    private func exportCurrentReport() {
+        let content = ReportExporter.generateCSV(
+            parcels: filteredParcels,
+            customers: customerViewModel.customers,
+            drivers: driverViewModel.drivers,
+            invoices: invoiceViewModel.invoices
+        )
+        exportedURL = ReportExporter.saveCSV(content, filename: "CourierPro_Report_\(dateString)")
+    }
+
+    private var filteredParcels: [Parcel] {
+        guard let range = dateRange else { return parcelViewModel.parcels }
+        return parcelViewModel.parcels.filter { range.contains($0.createdAt) }
+    }
+
+    private var dateString: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
+    }
+}
+
+struct DateRangePicker: View {
+    @Binding var startDate: Date
+    @Binding var endDate: Date
+    let onSelect: (ClosedRange<Date>) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Select Date Range")
+                .font(.headline)
+
+            DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
+            DatePicker("End Date", selection: $endDate, displayedComponents: .date)
+
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Button("Apply") {
+                    let range = min(startDate.timeIntervalSince1970, endDate.timeIntervalSince1970)
+                    let start = Date(timeIntervalSince1970: range)
+                    let end = Date(timeIntervalSince1970: max(startDate.timeIntervalSince1970, endDate.timeIntervalSince1970))
+                    onSelect(start...end)
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding()
+        .frame(width: 350)
     }
 }
 
@@ -74,6 +172,12 @@ struct OverviewReportView: View {
     @ObservedObject var customerViewModel: CustomerViewModel
     @ObservedObject var driverViewModel: DriverViewModel
     @ObservedObject var invoiceViewModel: InvoiceViewModel
+    var dateRange: ClosedRange<Date>?
+
+    private var filteredParcels: [Parcel] {
+        guard let range = dateRange else { return parcelViewModel.parcels }
+        return parcelViewModel.parcels.filter { range.contains($0.createdAt) }
+    }
 
     var body: some View {
         ScrollView {
@@ -86,7 +190,7 @@ struct OverviewReportView: View {
                     GridItem(.flexible()),
                     GridItem(.flexible())
                 ], spacing: 16) {
-                    ReportCard(title: "Total Parcels", value: "\(parcelViewModel.parcels.count)", icon: "shippingbox.fill", color: .blue)
+                    ReportCard(title: "Total Parcels", value: "\(filteredParcels.count)", icon: "shippingbox.fill", color: .blue)
                     ReportCard(title: "Active Customers", value: "\(customerViewModel.customers.count)", icon: "person.2.fill", color: .orange)
                     ReportCard(title: "Total Drivers", value: "\(driverViewModel.drivers.count)", icon: "car.fill", color: .teal)
                     ReportCard(title: "Total Invoices", value: "\(invoiceViewModel.invoices.count)", icon: "doc.text.fill", color: .purple)
@@ -108,7 +212,7 @@ struct OverviewReportView: View {
                     ForEach(DeliveryStatus.allCases) { status in
                         StatusCountCard(
                             status: status,
-                            count: parcelViewModel.parcels.filter { $0.status == status }.count
+                            count: filteredParcels.filter { $0.status == status }.count
                         )
                     }
                 }
@@ -135,6 +239,12 @@ struct OverviewReportView: View {
 
 struct RevenueReportView: View {
     @ObservedObject var invoiceViewModel: InvoiceViewModel
+    var dateRange: ClosedRange<Date>?
+
+    private var filteredInvoices: [Invoice] {
+        guard let range = dateRange else { return invoiceViewModel.invoices }
+        return invoiceViewModel.invoices.filter { range.contains($0.createdAt) }
+    }
 
     var body: some View {
         ScrollView {
@@ -149,10 +259,10 @@ struct RevenueReportView: View {
                     GridItem(.flexible()),
                     GridItem(.flexible())
                 ], spacing: 16) {
-                    ReportCard(title: "Total Revenue", value: String(format: "$%.2f", invoiceViewModel.totalRevenue), icon: "dollarsign.circle.fill", color: .green)
-                    ReportCard(title: "Pending", value: String(format: "$%.2f", invoiceViewModel.pendingAmount), icon: "clock.fill", color: .orange)
-                    ReportCard(title: "Overdue", value: String(format: "$%.2f", invoiceViewModel.overdueAmount), icon: "exclamationmark.triangle.fill", color: .red)
-                    ReportCard(title: "Avg Invoice", value: String(format: "$%.2f", averageInvoiceValue), icon: "chart.bar.fill", color: .blue)
+                    ReportCard(title: "Total Revenue", value: String(format: "$%.2f", filteredInvoices.filter { $0.status == .paid }.reduce(0) { $0 + $1.totalAmount }), icon: "dollarsign.circle.fill", color: .green)
+                    ReportCard(title: "Pending", value: String(format: "$%.2f", filteredInvoices.filter { $0.status == .pending }.reduce(0) { $0 + $1.balanceDue }), icon: "clock.fill", color: .orange)
+                    ReportCard(title: "Overdue", value: String(format: "$%.2f", filteredInvoices.filter { $0.status == .overdue }.reduce(0) { $0 + $1.balanceDue }), icon: "exclamationmark.triangle.fill", color: .red)
+                    ReportCard(title: "Avg Invoice", value: String(format: "$%.2f", filteredInvoices.isEmpty ? 0 : filteredInvoices.reduce(0) { $0 + $1.totalAmount } / Double(filteredInvoices.count)), icon: "chart.bar.fill", color: .blue)
                 }
 
                 Text("Invoices by Status")
@@ -161,8 +271,8 @@ struct RevenueReportView: View {
                     .padding(.top)
 
                 ForEach(InvoiceStatus.allCases) { status in
-                    let count = invoiceViewModel.invoices.filter { $0.status == status }.count
-                    let total = invoiceViewModel.invoices.filter { $0.status == status }.reduce(0) { $0 + $1.totalAmount }
+                    let count = filteredInvoices.filter { $0.status == status }.count
+                    let total = filteredInvoices.filter { $0.status == status }.reduce(0) { $0 + $1.totalAmount }
                     HStack {
                         Image(systemName: status.systemImage)
                             .foregroundColor(statusColor(status))
@@ -182,11 +292,6 @@ struct RevenueReportView: View {
         }
     }
 
-    private var averageInvoiceValue: Double {
-        guard !invoiceViewModel.invoices.isEmpty else { return 0 }
-        return invoiceViewModel.invoices.reduce(0) { $0 + $1.totalAmount } / Double(invoiceViewModel.invoices.count)
-    }
-
     private func statusColor(_ status: InvoiceStatus) -> Color {
         switch status {
         case .draft: return .gray
@@ -200,6 +305,12 @@ struct RevenueReportView: View {
 
 struct DeliveryReportView: View {
     @ObservedObject var parcelViewModel: ParcelViewModel
+    var dateRange: ClosedRange<Date>?
+
+    private var filteredParcels: [Parcel] {
+        guard let range = dateRange else { return parcelViewModel.parcels }
+        return parcelViewModel.parcels.filter { range.contains($0.createdAt) }
+    }
 
     var body: some View {
         ScrollView {
@@ -213,8 +324,8 @@ struct DeliveryReportView: View {
                     GridItem(.flexible()),
                     GridItem(.flexible())
                 ], spacing: 16) {
-                    ReportCard(title: "Total Deliveries", value: "\(parcelViewModel.parcels.count)", icon: "shippingbox.fill", color: .blue)
-                    ReportCard(title: "Completed", value: "\(parcelViewModel.parcels.filter { $0.status == .delivered }.count)", icon: "checkmark.circle.fill", color: .green)
+                    ReportCard(title: "Total Deliveries", value: "\(filteredParcels.count)", icon: "shippingbox.fill", color: .blue)
+                    ReportCard(title: "Completed", value: "\(filteredParcels.filter { $0.status == .delivered }.count)", icon: "checkmark.circle.fill", color: .green)
                     ReportCard(title: "Success Rate", value: successRate, icon: "chart.pie.fill", color: .purple)
                 }
 
@@ -224,8 +335,8 @@ struct DeliveryReportView: View {
                     .padding(.top)
 
                 ForEach(DeliveryStatus.allCases) { status in
-                    let count = parcelViewModel.parcels.filter { $0.status == status }.count
-                    let percentage = parcelViewModel.parcels.isEmpty ? 0 : Double(count) / Double(parcelViewModel.parcels.count) * 100
+                    let count = filteredParcels.filter { $0.status == status }.count
+                    let percentage = filteredParcels.isEmpty ? 0 : Double(count) / Double(filteredParcels.count) * 100
                     HStack {
                         Image(systemName: status.systemImage)
                             .foregroundColor(statusColor(status))
@@ -248,9 +359,9 @@ struct DeliveryReportView: View {
     }
 
     private var successRate: String {
-        guard !parcelViewModel.parcels.isEmpty else { return "0%" }
-        let delivered = parcelViewModel.parcels.filter { $0.status == .delivered }.count
-        return String(format: "%.1f%%", Double(delivered) / Double(parcelViewModel.parcels.count) * 100)
+        guard !filteredParcels.isEmpty else { return "0%" }
+        let delivered = filteredParcels.filter { $0.status == .delivered }.count
+        return String(format: "%.1f%%", Double(delivered) / Double(filteredParcels.count) * 100)
     }
 
     private func statusColor(_ status: DeliveryStatus) -> Color {
@@ -268,6 +379,7 @@ struct DeliveryReportView: View {
 struct DriverReportView: View {
     @ObservedObject var driverViewModel: DriverViewModel
     @ObservedObject var parcelViewModel: ParcelViewModel
+    var dateRange: ClosedRange<Date>?
 
     var body: some View {
         ScrollView {

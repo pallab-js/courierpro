@@ -28,19 +28,18 @@ struct CustomerListView: View {
 
             Divider()
 
-            if viewModel.filteredCustomers.isEmpty {
-                VStack {
-                    Image(systemName: "person.2")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-                    Text("No customers found")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                    Text("Add your first customer to get started")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if viewModel.isLoading {
+                LoadingView()
+            } else if viewModel.filteredCustomers.isEmpty {
+                EmptyStateView(
+                    icon: "person.2",
+                    title: viewModel.customers.isEmpty ? "No Customers Yet" : "No Customers Found",
+                    message: viewModel.customers.isEmpty
+                        ? "Add your first customer to start managing contacts"
+                        : "Try adjusting your search criteria",
+                    actionTitle: viewModel.customers.isEmpty ? "Add Customer" : nil,
+                    action: viewModel.customers.isEmpty ? { showingCreateSheet = true } : nil
+                )
             } else {
                 Table(viewModel.filteredCustomers) {
                     TableColumn("Name") { customer in
@@ -76,14 +75,14 @@ struct CustomerListView: View {
                         }
                         Divider()
                         Button("Delete", role: .destructive) {
-                            try? viewModel.deleteCustomer(customer)
+                            viewModel.deleteCustomer(customer)
                         }
                     }
                 }
             }
         }
         .task {
-            try? viewModel.loadCustomers()
+            viewModel.loadCustomers()
         }
         .sheet(isPresented: $showingCreateSheet) {
             CustomerFormView(viewModel: viewModel)
@@ -91,6 +90,7 @@ struct CustomerListView: View {
         .sheet(item: $selectedCustomer) { customer in
             CustomerEditView(customer: customer, viewModel: viewModel)
         }
+        .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
     }
 }
 
