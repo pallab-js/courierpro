@@ -4,7 +4,10 @@ import SwiftData
 
 struct DeliveryMapView: View {
     @Query private var allParcels: [Parcel]
-    @State private var position: MapCameraPosition = .automatic
+    @State private var position: MapCameraPosition = .region(MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 20.5937, longitude: 78.9629),
+        span: MKCoordinateSpan(latitudeDelta: 12, longitudeDelta: 12)
+    ))
     @State private var showDelivered = false
 
     private var parcels: [Parcel] {
