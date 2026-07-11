@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import SwiftUI
 
 enum DeliveryStatus: Int, Codable, CaseIterable, Identifiable {
     case created = 0
@@ -33,14 +34,31 @@ enum DeliveryStatus: Int, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var color: String {
+    var color: Color {
         switch self {
-        case .created: return "blue"
-        case .pickedUp: return "orange"
-        case .inTransit: return "purple"
-        case .outForDelivery: return "yellow"
-        case .delivered: return "green"
-        case .failed: return "red"
+        case .created: return .blue
+        case .pickedUp: return .orange
+        case .inTransit: return .purple
+        case .outForDelivery: return .yellow
+        case .delivered: return .green
+        case .failed: return .red
         }
+    }
+
+    var orderedSuccessors: [DeliveryStatus] {
+        switch self {
+        case .created: return [.pickedUp, .inTransit, .outForDelivery, .delivered]
+        case .pickedUp: return [.inTransit, .outForDelivery, .delivered]
+        case .inTransit: return [.outForDelivery, .delivered]
+        case .outForDelivery: return [.delivered]
+        case .delivered: return []
+        case .failed: return []
+        }
+    }
+
+    func isCompletedOrSucceeded(by currentStatus: DeliveryStatus) -> Bool {
+        if currentStatus == self { return true }
+        if currentStatus == .failed { return false }
+        return currentStatus.orderedSuccessors.contains(self)
     }
 }

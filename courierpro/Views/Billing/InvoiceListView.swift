@@ -111,7 +111,7 @@ struct InvoiceRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text(String(format: "$%.2f", invoice.totalAmount))
+                Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", invoice.totalAmount))")
                     .font(.body)
                     .fontWeight(.medium)
                 Text(invoice.status.displayName)
@@ -124,15 +124,15 @@ struct InvoiceRow: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                 if !invoice.isFullyPaid {
-                    Text("Balance: $\(String(format: "%.2f", invoice.balanceDue))")
+                    Text("Balance: \(AppSettings.shared.currencySymbol)\(String(format: "%.2f", invoice.balanceDue))")
                         .font(.caption)
                         .foregroundColor(.orange)
                 }
             }
         }
         .padding(.vertical, 4)
-        .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
+.contentShape(Rectangle())
+        .onTapGesture {
             onSelect()
         }
     }

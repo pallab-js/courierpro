@@ -60,14 +60,14 @@ struct DriverScheduleCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Circle()
-                    .fill(schedule.isAvailable ? Color.green : Color.orange)
+                    .fill(!schedule.driver.isAvailable ? Color.red : (schedule.driver.isBusy ? Color.orange : Color.green))
                     .frame(width: 12, height: 12)
                 Text(schedule.driver.name)
                     .font(.headline)
                 Spacer()
-                Text(schedule.isAvailable ? "Available" : "Busy")
+                Text(!schedule.driver.isAvailable ? "Unavailable" : (schedule.driver.isBusy ? "Busy" : "Available"))
                     .font(.caption)
-                    .foregroundColor(schedule.isAvailable ? .green : .orange)
+                    .foregroundColor(!schedule.driver.isAvailable ? .red : (schedule.driver.isBusy ? .orange : .green))
             }
 
             if !schedule.assignedParcels.isEmpty {
@@ -78,40 +78,30 @@ struct DriverScheduleCard: View {
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
 
-                ForEach(Array(schedule.assignedParcels.enumerated()), id: \.element.id) { index, parcel in
-                    HStack(alignment: .top, spacing: 8) {
-                        VStack {
-                            Circle()
-                                .fill(index == 0 ? Color.blue : (index == schedule.assignedParcels.count - 1 ? Color.green : Color.purple))
-                                .frame(width: 8, height: 8)
-                            if index < schedule.assignedParcels.count - 1 {
-                                Rectangle()
-                                    .fill(Color.secondary.opacity(0.3))
-                                    .frame(width: 2, height: 20)
+                VStack(spacing: 8) {
+                    ForEach(schedule.assignedParcels) { parcel in
+                        HStack {
+                            Image(systemName: parcel.status.systemImage)
+                                .foregroundColor(parcel.status.color)
+                            VStack(alignment: .leading) {
+                                Text(parcel.trackingNumber)
+                                    .font(.system(.body, design: .monospaced))
+                                if let receiver = parcel.receiver {
+                                    Text("To: \(receiver.name) (\(receiver.shortAddress))")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
                             }
+                            Spacer()
+                            Button {
+                                onUnassign(parcel)
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.red)
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.plain)
                         }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(parcel.trackingNumber)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .fontDesign(.monospaced)
-                            Text("\(parcel.senderName) → \(parcel.receiverName)")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-
-                        StatusBadge(status: parcel.status)
-                            .scaleEffect(0.8)
-
-                        Button(action: { onUnassign(parcel) }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.red)
-                                .font(.caption)
-                        }
-                        .buttonStyle(.plain)
                     }
                 }
 
@@ -127,13 +117,18 @@ struct DriverScheduleCard: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             } else {
-                EmptyStateView(
-                    icon: "shippingbox",
-                    title: "No Parcels Assigned",
-                    message: "Assign parcels to this driver",
-                    actionTitle: nil,
-                    action: nil
-                )
+                VStack(spacing: 4) {
+                    Image(systemName: "shippingbox")
+                        .font(.system(size: 24))
+                        .foregroundColor(.secondary)
+                    Text("No Parcels Assigned")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                    Text("Assign parcels to this driver")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
                 .frame(height: 80)
             }
         }

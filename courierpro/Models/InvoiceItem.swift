@@ -22,9 +22,9 @@ final class InvoiceItem {
     ) {
         self.id = id
         self.itemDescription = itemDescription
-        self.quantity = quantity
-        self.unitPrice = unitPrice
-        self.totalPrice = Double(quantity) * unitPrice
+        self.quantity = max(0, quantity)
+        self.unitPrice = unitPrice.isFinite ? max(0, unitPrice) : 0
+        self.totalPrice = Double(max(0, quantity)) * (unitPrice.isFinite ? max(0, unitPrice) : 0)
         self.parcel = parcel
         self.invoice = invoice
     }

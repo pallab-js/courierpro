@@ -107,10 +107,14 @@ struct ReportsView: View {
         return parcelViewModel.parcels.filter { range.contains($0.createdAt) }
     }
 
-    private var dateString: String {
+    private static let reportDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: Date())
+        return formatter
+    }()
+
+    private var dateString: String {
+        Self.reportDateFormatter.string(from: Date())
     }
 }
 
@@ -135,10 +139,14 @@ struct DateRangePicker: View {
                 .keyboardShortcut(.cancelAction)
 
                 Button("Apply") {
-                    let range = min(startDate.timeIntervalSince1970, endDate.timeIntervalSince1970)
-                    let start = Date(timeIntervalSince1970: range)
-                    let end = Date(timeIntervalSince1970: max(startDate.timeIntervalSince1970, endDate.timeIntervalSince1970))
-                    onSelect(start...end)
+                    let calendar = Calendar.current
+                    let sortedStart = min(startDate, endDate)
+                    let sortedEnd = max(startDate, endDate)
+                    
+                    let startOfDay = calendar.startOfDay(for: sortedStart)
+                    let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: sortedEnd) ?? sortedEnd
+                    
+                    onSelect(startOfDay...endOfDay)
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -227,9 +235,9 @@ struct OverviewReportView: View {
                     GridItem(.flexible()),
                     GridItem(.flexible())
                 ], spacing: 16) {
-                    ReportCard(title: "Total Revenue", value: String(format: "$%.2f", invoiceViewModel.totalRevenue), icon: "dollarsign.circle.fill", color: .green)
-                    ReportCard(title: "Pending", value: String(format: "$%.2f", invoiceViewModel.pendingAmount), icon: "clock.fill", color: .orange)
-                    ReportCard(title: "Overdue", value: String(format: "$%.2f", invoiceViewModel.overdueAmount), icon: "exclamationmark.triangle.fill", color: .red)
+                    ReportCard(title: "Total Revenue", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", invoiceViewModel.totalRevenue), icon: "dollarsign.circle.fill", color: .green)
+                    ReportCard(title: "Pending", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", invoiceViewModel.pendingAmount), icon: "clock.fill", color: .orange)
+                    ReportCard(title: "Overdue", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", invoiceViewModel.overdueAmount), icon: "exclamationmark.triangle.fill", color: .red)
                 }
             }
             .padding()
@@ -259,10 +267,10 @@ struct RevenueReportView: View {
                     GridItem(.flexible()),
                     GridItem(.flexible())
                 ], spacing: 16) {
-                    ReportCard(title: "Total Revenue", value: String(format: "$%.2f", filteredInvoices.filter { $0.status == .paid }.reduce(0) { $0 + $1.totalAmount }), icon: "dollarsign.circle.fill", color: .green)
-                    ReportCard(title: "Pending", value: String(format: "$%.2f", filteredInvoices.filter { $0.status == .pending }.reduce(0) { $0 + $1.balanceDue }), icon: "clock.fill", color: .orange)
-                    ReportCard(title: "Overdue", value: String(format: "$%.2f", filteredInvoices.filter { $0.status == .overdue }.reduce(0) { $0 + $1.balanceDue }), icon: "exclamationmark.triangle.fill", color: .red)
-                    ReportCard(title: "Avg Invoice", value: String(format: "$%.2f", filteredInvoices.isEmpty ? 0 : filteredInvoices.reduce(0) { $0 + $1.totalAmount } / Double(filteredInvoices.count)), icon: "chart.bar.fill", color: .blue)
+                    ReportCard(title: "Total Revenue", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", filteredInvoices.filter { $0.status == .paid }.reduce(0) { $0 + $1.totalAmount }), icon: "dollarsign.circle.fill", color: .green)
+                    ReportCard(title: "Pending", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", filteredInvoices.filter { $0.status == .pending }.reduce(0) { $0 + $1.balanceDue }), icon: "clock.fill", color: .orange)
+                    ReportCard(title: "Overdue", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", filteredInvoices.filter { $0.status == .overdue }.reduce(0) { $0 + $1.balanceDue }), icon: "exclamationmark.triangle.fill", color: .red)
+                    ReportCard(title: "Avg Invoice", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", filteredInvoices.isEmpty ? 0 : filteredInvoices.reduce(0) { $0 + $1.totalAmount } / Double(filteredInvoices.count)), icon: "chart.bar.fill", color: .blue)
                 }
 
                 Text("Invoices by Status")
@@ -275,13 +283,13 @@ struct RevenueReportView: View {
                     let total = filteredInvoices.filter { $0.status == status }.reduce(0) { $0 + $1.totalAmount }
                     HStack {
                         Image(systemName: status.systemImage)
-                            .foregroundColor(statusColor(status))
+                            .foregroundColor(status.color)
                             .frame(width: 20)
                         Text(status.displayName)
                         Spacer()
                         Text("\(count) invoices")
                             .foregroundColor(.secondary)
-                        Text(String(format: "$%.2f", total))
+                        Text(String(format: "\(AppSettings.shared.currencySymbol)%.2f", total))
                             .fontWeight(.medium)
                             .frame(width: 100, alignment: .trailing)
                     }
@@ -289,16 +297,6 @@ struct RevenueReportView: View {
                 }
             }
             .padding()
-        }
-    }
-
-    private func statusColor(_ status: InvoiceStatus) -> Color {
-        switch status {
-        case .draft: return .gray
-        case .pending: return .orange
-        case .paid: return .green
-        case .overdue: return .red
-        case .cancelled: return .gray
         }
     }
 }
@@ -339,7 +337,7 @@ struct DeliveryReportView: View {
                     let percentage = filteredParcels.isEmpty ? 0 : Double(count) / Double(filteredParcels.count) * 100
                     HStack {
                         Image(systemName: status.systemImage)
-                            .foregroundColor(statusColor(status))
+                            .foregroundColor(status.color)
                             .frame(width: 20)
                         Text(status.displayName)
                         Spacer()
@@ -362,17 +360,6 @@ struct DeliveryReportView: View {
         guard !filteredParcels.isEmpty else { return "0%" }
         let delivered = filteredParcels.filter { $0.status == .delivered }.count
         return String(format: "%.1f%%", Double(delivered) / Double(filteredParcels.count) * 100)
-    }
-
-    private func statusColor(_ status: DeliveryStatus) -> Color {
-        switch status {
-        case .created: return .blue
-        case .pickedUp: return .orange
-        case .inTransit: return .purple
-        case .outForDelivery: return .yellow
-        case .delivered: return .green
-        case .failed: return .red
-        }
     }
 }
 
@@ -408,7 +395,7 @@ struct DriverReportView: View {
                     let activeCount = driver.assignedParcels?.filter { $0.status != .delivered && $0.status != .failed }.count ?? 0
                     HStack {
                         Circle()
-                            .fill(driver.isAvailable ? Color.green : Color.orange)
+                            .fill(!driver.isAvailable ? Color.red : (driver.isBusy ? Color.orange : Color.green))
                             .frame(width: 10, height: 10)
                         VStack(alignment: .leading) {
                             Text(driver.name)
@@ -469,7 +456,7 @@ struct StatusCountCard: View {
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: status.systemImage)
-                .foregroundColor(statusColor)
+                .foregroundColor(status.color)
                 .font(.title2)
             Text("\(count)")
                 .font(.title3)
@@ -481,17 +468,6 @@ struct StatusCountCard: View {
         .padding()
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(10)
-    }
-
-    private var statusColor: Color {
-        switch status {
-        case .created: return .blue
-        case .pickedUp: return .orange
-        case .inTransit: return .purple
-        case .outForDelivery: return .yellow
-        case .delivered: return .green
-        case .failed: return .red
-        }
     }
 }
 

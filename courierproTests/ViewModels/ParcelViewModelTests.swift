@@ -24,8 +24,8 @@ final class ParcelViewModelTests: XCTestCase {
     }
 
     func testCreateParcel() {
-        let sender = Customer(name: "Sender")
-        let receiver = Customer(name: "Receiver")
+        let sender = Customer(name: "Reliance Retail")
+        let receiver = Customer(name: "Tata Steel")
 
         viewModel.createParcel(
             sender: sender,
@@ -36,13 +36,13 @@ final class ParcelViewModelTests: XCTestCase {
         )
 
         XCTAssertEqual(viewModel.parcels.count, 1)
-        XCTAssertEqual(viewModel.parcels.first?.senderName, "Sender")
-        XCTAssertEqual(viewModel.parcels.first?.receiverName, "Receiver")
+        XCTAssertEqual(viewModel.parcels.first?.senderName, "Reliance Retail")
+        XCTAssertEqual(viewModel.parcels.first?.receiverName, "Tata Steel")
     }
 
     func testUpdateParcelStatus() {
-        let sender = Customer(name: "Sender")
-        let receiver = Customer(name: "Receiver")
+        let sender = Customer(name: "Reliance Retail")
+        let receiver = Customer(name: "Tata Steel")
 
         viewModel.createParcel(
             sender: sender,
@@ -53,14 +53,16 @@ final class ParcelViewModelTests: XCTestCase {
         )
 
         let parcel = viewModel.parcels.first!
-        viewModel.updateParcelStatus(parcel, status: .inTransit)
+        viewModel.updateParcelStatus(parcel, status: .pickedUp)
+        XCTAssertEqual(viewModel.parcels.first?.status, .pickedUp)
 
+        viewModel.updateParcelStatus(parcel, status: .inTransit)
         XCTAssertEqual(viewModel.parcels.first?.status, .inTransit)
     }
 
     func testDeleteParcel() {
-        let sender = Customer(name: "Sender")
-        let receiver = Customer(name: "Receiver")
+        let sender = Customer(name: "Reliance Retail")
+        let receiver = Customer(name: "Tata Steel")
 
         viewModel.createParcel(
             sender: sender,
@@ -79,8 +81,8 @@ final class ParcelViewModelTests: XCTestCase {
     }
 
     func testFilteredParcels() {
-        let sender = Customer(name: "Sender")
-        let receiver = Customer(name: "Receiver")
+        let sender = Customer(name: "Reliance Retail")
+        let receiver = Customer(name: "Tata Steel")
 
         viewModel.createParcel(
             sender: sender,
@@ -98,8 +100,8 @@ final class ParcelViewModelTests: XCTestCase {
     }
 
     func testParcelCountByStatus() {
-        let sender = Customer(name: "Sender")
-        let receiver = Customer(name: "Receiver")
+        let sender = Customer(name: "Reliance Retail")
+        let receiver = Customer(name: "Tata Steel")
 
         viewModel.createParcel(
             sender: sender,

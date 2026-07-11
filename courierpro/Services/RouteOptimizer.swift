@@ -57,6 +57,9 @@ struct RouteOptimizer {
     }
 
     static func distance(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> Double {
+        guard CLLocationCoordinate2DIsValid(from), CLLocationCoordinate2DIsValid(to) else {
+            return Double.greatestFiniteMagnitude
+        }
         let fromLocation = CLLocation(latitude: from.latitude, longitude: from.longitude)
         let toLocation = CLLocation(latitude: to.latitude, longitude: to.longitude)
         return fromLocation.distance(from: toLocation) / 1000
@@ -103,7 +106,11 @@ final class DriverScheduleViewModel: ObservableObject {
 
             var result: [DriverSchedule] = []
             for driver in drivers {
-                let driverParcels = parcels.filter { $0.driver?.id == driver.id && $0.status != .delivered && $0.status != .failed }
+                let driverParcels = parcels.filter { parcel in
+                    parcel.driver?.id == driver.id &&
+                    parcel.status != .delivered &&
+                    parcel.status != .failed
+                }
                 let optimizedParcels = RouteOptimizer.optimizeRoute(for: driverParcels)
                 let schedule = DriverSchedule(
                     driver: driver,
@@ -122,7 +129,6 @@ final class DriverScheduleViewModel: ObservableObject {
 
     func assignParcel(_ parcel: Parcel, to driver: Driver) {
         parcel.driver = driver
-        driver.isAvailable = false
         do {
             try persistenceService.save()
             loadSchedules()
@@ -133,12 +139,7 @@ final class DriverScheduleViewModel: ObservableObject {
     }
 
     func unassignParcel(_ parcel: Parcel) {
-        let driver = parcel.driver
         parcel.driver = nil
-        if let driver = driver {
-            let hasOtherParcels = (driver.assignedParcels ?? []).contains { $0.id != parcel.id && $0.status != .delivered }
-            driver.isAvailable = !hasOtherParcels
-        }
         do {
             try persistenceService.save()
             loadSchedules()

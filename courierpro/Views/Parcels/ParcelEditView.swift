@@ -141,14 +141,22 @@ struct ParcelEditView: View {
             return
         }
 
-        let weightValue = Double(weight) ?? 0
+        guard !weight.isEmpty,
+              let weightValue = Double(weight),
+              weightValue.isFinite,
+              weightValue >= 0,
+              weightValue <= 10_000 else {
+            errorMessage = "Please enter a valid weight (0-10000 kg)"
+            showingError = true
+            return
+        }
 
         parcel.sender = sender
         parcel.receiver = receiver
         parcel.driver = selectedDriver
         parcel.weight = weightValue
-        parcel.dimensions = dimensions
-        parcel.notes = notes.isEmpty ? nil : notes
+        parcel.dimensions = String(dimensions.prefix(200))
+        parcel.notes = notes.isEmpty ? nil : String(notes.prefix(1000))
         parcel.updatedAt = Date()
 
         do {
@@ -156,7 +164,7 @@ struct ParcelEditView: View {
             try viewModel.loadParcels()
             dismiss()
         } catch {
-            errorMessage = "Failed to save changes: \(error.localizedDescription)"
+            errorMessage = "Failed to save changes"
             showingError = true
         }
     }

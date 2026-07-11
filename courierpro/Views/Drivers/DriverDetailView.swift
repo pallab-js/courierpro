@@ -58,11 +58,11 @@ struct DriverDetailView: View {
             Spacer()
             HStack(spacing: 8) {
                 Circle()
-                    .fill(driver.isAvailable ? Color.green : Color.orange)
+                    .fill(!driver.isAvailable ? Color.red : (driver.isBusy ? Color.orange : Color.green))
                     .frame(width: 12, height: 12)
-                Text(driver.isAvailable ? "Available" : "Busy")
+                Text(!driver.isAvailable ? "Unavailable" : (driver.isBusy ? "Busy" : "Available"))
                     .font(.headline)
-                    .foregroundColor(driver.isAvailable ? .green : .orange)
+                    .foregroundColor(!driver.isAvailable ? .red : (driver.isBusy ? .orange : .green))
             }
             .padding(10)
             .background(Color(NSColor.controlBackgroundColor))
@@ -90,7 +90,7 @@ struct DriverDetailView: View {
                 GridRow {
                     Text("Status:")
                         .foregroundColor(.secondary)
-                    Text(driver.isAvailable ? "Available for dispatch" : "Currently busy")
+                    Text(!driver.isAvailable ? "Unavailable" : (driver.isBusy ? "Currently busy" : "Available for dispatch"))
                 }
                 GridRow {
                     Text("Added:")

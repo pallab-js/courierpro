@@ -42,13 +42,13 @@ struct CustomerEditView: View {
 
                     HStack {
                         Text("Email:")
-                        TextField("email@example.com", text: $email)
+                        TextField("info@company.in", text: $email)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     HStack {
                         Text("Phone:")
-                        TextField("555-0100", text: $phone)
+                        TextField("9876543210", text: $phone)
                             .textFieldStyle(.roundedBorder)
                     }
                 }
@@ -56,19 +56,19 @@ struct CustomerEditView: View {
                 Section("Address") {
                     HStack {
                         Text("Address:")
-                        TextField("Street address", text: $address)
+                        TextField("Street address, locality", text: $address)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     HStack {
                         Text("City:")
-                        TextField("City", text: $city)
+                        TextField("e.g., Mumbai, Delhi, Bangalore", text: $city)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     HStack {
                         Text("Postal Code:")
-                        TextField("12345", text: $postalCode)
+                        TextField("6-digit PIN code", text: $postalCode)
                             .textFieldStyle(.roundedBorder)
                     }
                 }
@@ -105,21 +105,33 @@ struct CustomerEditView: View {
             return
         }
 
-        do {
-            try viewModel.updateCustomer(
-                customer,
-                name: name,
-                email: email,
-                phone: phone,
-                address: address,
-                city: city,
-                postalCode: postalCode
-            )
-            dismiss()
-        } catch {
-            errorMessage = "Failed to save changes: \(error.localizedDescription)"
-            showingError = true
+        let trimmedPhone = phone.trimmingCharacters(in: .whitespaces)
+        if !trimmedPhone.isEmpty {
+            let digitsOnly = trimmedPhone.filter { $0.isNumber }
+            if digitsOnly.count != 10 {
+                errorMessage = "Phone number must be 10 digits"
+                showingError = true
+                return
+            }
         }
+
+        let trimmedPostal = postalCode.trimmingCharacters(in: .whitespaces)
+        if !trimmedPostal.isEmpty && trimmedPostal.count != 6 {
+            errorMessage = "PIN code must be 6 digits"
+            showingError = true
+            return
+        }
+
+        viewModel.updateCustomer(
+            customer,
+            name: name,
+            email: email,
+            phone: phone,
+            address: address,
+            city: city,
+            postalCode: postalCode
+        )
+        dismiss()
     }
 }
 

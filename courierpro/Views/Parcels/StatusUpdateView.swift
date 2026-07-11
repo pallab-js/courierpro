@@ -96,7 +96,7 @@ struct StatusUpdateView: View {
             updatedBy: updatedBy.isEmpty ? nil : updatedBy,
             parcel: parcel
         )
-        PersistenceService.shared.insert(history)
+        viewModel.persistenceService.insert(history)
 
         do {
             try viewModel.updateParcelStatus(parcel, status: selectedStatus)

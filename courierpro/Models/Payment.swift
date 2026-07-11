@@ -56,7 +56,7 @@ final class Payment {
         createdAt: Date = Date()
     ) {
         self.id = id
-        self.amount = amount
+        self.amount = amount.isFinite ? max(0, amount) : 0
         self.methodRaw = method.rawValue
         self.reference = reference
         self.notes = notes

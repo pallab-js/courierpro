@@ -198,7 +198,7 @@ struct ParcelDetailView: View {
                 ForEach(history) { entry in
                     HStack(alignment: .top, spacing: 12) {
                         Image(systemName: entry.status.systemImage)
-                            .foregroundColor(statusColor(entry.status))
+                            .foregroundColor(entry.status.color)
                             .frame(width: 20)
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -230,17 +230,6 @@ struct ParcelDetailView: View {
             }
         }
     }
-
-    private func statusColor(_ status: DeliveryStatus) -> Color {
-        switch status {
-        case .created: return .blue
-        case .pickedUp: return .orange
-        case .inTransit: return .purple
-        case .outForDelivery: return .yellow
-        case .delivered: return .green
-        case .failed: return .red
-        }
-    }
 }
 
 struct StatusTimelineItem: View {
@@ -249,7 +238,7 @@ struct StatusTimelineItem: View {
     let title: String
 
     private var isCompleted: Bool {
-        currentStatus.rawValue >= status.rawValue
+        status.isCompletedOrSucceeded(by: currentStatus)
     }
 
     private var isCurrent: Bool {
@@ -260,7 +249,7 @@ struct StatusTimelineItem: View {
         VStack(spacing: 6) {
             ZStack {
                 Circle()
-                    .fill(isCompleted ? statusColor : Color.gray.opacity(0.3))
+                    .fill(isCompleted ? status.color : Color.gray.opacity(0.3))
                     .frame(width: 24, height: 24)
                 if isCompleted {
                     Image(systemName: isCurrent ? status.systemImage : "checkmark")
@@ -273,17 +262,6 @@ struct StatusTimelineItem: View {
                 .foregroundColor(isCompleted ? .primary : .secondary)
         }
         .frame(maxWidth: .infinity)
-    }
-
-    private var statusColor: Color {
-        switch status {
-        case .created: return .blue
-        case .pickedUp: return .orange
-        case .inTransit: return .purple
-        case .outForDelivery: return .yellow
-        case .delivered: return .green
-        case .failed: return .red
-        }
     }
 }
 

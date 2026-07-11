@@ -22,7 +22,7 @@ final class RecurringInvoiceViewModel: ObservableObject {
             let descriptor = FetchDescriptor<RecurringInvoice>(sortBy: [SortDescriptor(\.nextDueDate)])
             recurringInvoices = try persistenceService.fetch(descriptor)
         } catch {
-            errorMessage = "Failed to load recurring invoices: \(error.localizedDescription)"
+            errorMessage = "Failed to load recurring invoices"
             showError = true
         }
     }
@@ -37,11 +37,14 @@ final class RecurringInvoiceViewModel: ObservableObject {
         startDate: Date
     ) {
         do {
+            let safeAmount = amount.isFinite ? max(0, amount) : 0
+            let safeTaxRate = taxRate.isFinite ? max(0, min(taxRate, 100)) : 0
+
             let recurringInvoice = RecurringInvoice(
                 name: name,
                 frequency: frequency,
-                amount: amount,
-                taxRate: taxRate,
+                amount: safeAmount,
+                taxRate: safeTaxRate,
                 notes: notes,
                 nextDueDate: startDate,
                 customer: customer
@@ -50,20 +53,37 @@ final class RecurringInvoiceViewModel: ObservableObject {
             try persistenceService.save()
             loadRecurringInvoices()
         } catch {
-            errorMessage = "Failed to create recurring invoice: \(error.localizedDescription)"
+            errorMessage = "Failed to create recurring invoice"
             showError = true
         }
     }
 
     func generateInvoice(from recurring: RecurringInvoice) {
         do {
-            let invoice = recurring.generateNextInvoice()
+            guard recurring.amount > 0 else {
+                errorMessage = "Amount must be greater than zero"
+                showError = true
+                return
+            }
+
+            if let lastGenerated = recurring.lastGeneratedDate,
+               lastGenerated >= recurring.nextDueDate {
+                errorMessage = "Invoice already generated for this period"
+                showError = true
+                return
+            }
+
+            guard let invoice = recurring.generateNextInvoice() else {
+                errorMessage = "Cannot generate invoice: missing customer or invalid amount"
+                showError = true
+                return
+            }
             persistenceService.insert(invoice)
             recurring.updateNextDueDate()
             try persistenceService.save()
             loadRecurringInvoices()
         } catch {
-            errorMessage = "Failed to generate invoice: \(error.localizedDescription)"
+            errorMessage = "Failed to generate invoice"
             showError = true
         }
     }
@@ -75,7 +95,7 @@ final class RecurringInvoiceViewModel: ObservableObject {
             try persistenceService.save()
             loadRecurringInvoices()
         } catch {
-            errorMessage = "Failed to update: \(error.localizedDescription)"
+            errorMessage = "Failed to update"
             showError = true
         }
     }
@@ -86,7 +106,7 @@ final class RecurringInvoiceViewModel: ObservableObject {
             try persistenceService.save()
             loadRecurringInvoices()
         } catch {
-            errorMessage = "Failed to delete: \(error.localizedDescription)"
+            errorMessage = "Failed to delete"
             showError = true
         }
     }

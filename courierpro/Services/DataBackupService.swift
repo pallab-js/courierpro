@@ -32,16 +32,50 @@ struct DataBackupService {
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = .prettyPrinted
         let data = try encoder.encode(backup)
-        try data.write(to: backupFile)
+        try data.write(to: backupFile, options: [.completeFileProtection])
 
         return backupFile
     }
 
     static func restoreBackup(from url: URL, context: ModelContext) throws {
+        let allowedDirectory = Self.backupDirectory()
+        let standardized = url.standardizedFileURL
+        guard standardized.path.hasPrefix(allowedDirectory.path) else {
+            throw BackupError.invalidPath
+        }
+
         let data = try Data(contentsOf: url)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let backup = try decoder.decode(BackupData.self, from: data)
+
+        guard backup.customers.count <= 100_000,
+              backup.parcels.count <= 500_000,
+              backup.drivers.count <= 10_000,
+              backup.invoices.count <= 500_000 else {
+            throw BackupError.decodingFailed
+        }
+
+        // Clear all existing database objects before restoring
+        let parcelsToDelete = try context.fetch(FetchDescriptor<Parcel>())
+        for object in parcelsToDelete { context.delete(object) }
+        let customersToDelete = try context.fetch(FetchDescriptor<Customer>())
+        for object in customersToDelete { context.delete(object) }
+        let driversToDelete = try context.fetch(FetchDescriptor<Driver>())
+        for object in driversToDelete { context.delete(object) }
+        let invoicesToDelete = try context.fetch(FetchDescriptor<Invoice>())
+        for object in invoicesToDelete { context.delete(object) }
+        let itemsToDelete = try context.fetch(FetchDescriptor<InvoiceItem>())
+        for object in itemsToDelete { context.delete(object) }
+        let paymentsToDelete = try context.fetch(FetchDescriptor<Payment>())
+        for object in paymentsToDelete { context.delete(object) }
+        let pricingRulesToDelete = try context.fetch(FetchDescriptor<PricingRule>())
+        for object in pricingRulesToDelete { context.delete(object) }
+        let recurringInvoicesToDelete = try context.fetch(FetchDescriptor<RecurringInvoice>())
+        for object in recurringInvoicesToDelete { context.delete(object) }
+        let statusHistoriesToDelete = try context.fetch(FetchDescriptor<StatusHistory>())
+        for object in statusHistoriesToDelete { context.delete(object) }
+        try context.save()
 
         for customerData in backup.customers {
             let customer = customerData.toCustomer()
@@ -64,9 +98,31 @@ struct DataBackupService {
             context.insert(parcel)
         }
 
+        // Fetch parcels AFTER they are inserted to ensure invoice items match correctly
+        let allParcels = try context.fetch(FetchDescriptor<Parcel>())
+
         for ruleData in backup.pricingRules {
             let rule = ruleData.toPricingRule()
             context.insert(rule)
+        }
+
+        for invoiceData in backup.invoices {
+            let invoice = invoiceData.toInvoice()
+            invoice.customer = allCustomers.first { $0.id == invoiceData.customerId }
+            context.insert(invoice)
+
+            for itemData in invoiceData.items {
+                let item = itemData.toInvoiceItem()
+                item.invoice = invoice
+                item.parcel = allParcels.first { $0.id == itemData.parcelId }
+                context.insert(item)
+            }
+
+            for paymentData in invoiceData.payments {
+                let payment = paymentData.toPayment()
+                payment.invoice = invoice
+                context.insert(payment)
+            }
         }
 
         try context.save()
@@ -84,7 +140,17 @@ struct DataBackupService {
     }
 
     static func deleteBackup(at url: URL) throws {
+        let allowedDirectory = Self.backupDirectory()
+        let standardized = url.standardizedFileURL
+        guard standardized.path.hasPrefix(allowedDirectory.path) else {
+            throw BackupError.invalidPath
+        }
         try FileManager.default.removeItem(at: url)
+    }
+
+    private static func backupDirectory() -> URL {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        return documents.appendingPathComponent("CourierPro_Backups", isDirectory: true)
     }
 }
 
@@ -92,12 +158,14 @@ enum BackupError: LocalizedError {
     case directoryNotFound
     case encodingFailed
     case decodingFailed
+    case invalidPath
 
     var errorDescription: String? {
         switch self {
         case .directoryNotFound: return "Could not find backup directory"
         case .encodingFailed: return "Failed to encode backup data"
         case .decodingFailed: return "Failed to decode backup data"
+        case .invalidPath: return "Invalid backup file path"
         }
     }
 }
@@ -253,6 +321,9 @@ struct BackupInvoice: Codable {
     let updatedAt: Date
     let dueDate: Date?
     let paidAt: Date?
+    let customerId: UUID?
+    let items: [BackupInvoiceItem]
+    let payments: [BackupPayment]
 
     init(from invoice: Invoice) {
         self.id = invoice.id
@@ -267,10 +338,13 @@ struct BackupInvoice: Codable {
         self.updatedAt = invoice.updatedAt
         self.dueDate = invoice.dueDate
         self.paidAt = invoice.paidAt
+        self.customerId = invoice.customer?.id
+        self.items = (invoice.items ?? []).map { BackupInvoiceItem(from: $0) }
+        self.payments = (invoice.payments ?? []).map { BackupPayment(from: $0) }
     }
 
     func toInvoice() -> Invoice {
-        Invoice(
+        let invoice = Invoice(
             id: id,
             invoiceNumber: invoiceNumber,
             status: InvoiceStatus(rawValue: statusRaw) ?? .draft,
@@ -280,6 +354,67 @@ struct BackupInvoice: Codable {
             dueDate: dueDate ?? Date(),
             createdAt: createdAt,
             updatedAt: updatedAt
+        )
+        invoice.paidAt = paidAt
+        return invoice
+    }
+}
+
+struct BackupInvoiceItem: Codable {
+    let id: UUID
+    let itemDescription: String
+    let quantity: Int
+    let unitPrice: Double
+    let totalPrice: Double
+    let parcelId: UUID?
+
+    init(from item: InvoiceItem) {
+        self.id = item.id
+        self.itemDescription = item.itemDescription
+        self.quantity = item.quantity
+        self.unitPrice = item.unitPrice
+        self.totalPrice = item.totalPrice
+        self.parcelId = item.parcel?.id
+    }
+
+    func toInvoiceItem() -> InvoiceItem {
+        InvoiceItem(
+            id: id,
+            itemDescription: itemDescription,
+            quantity: quantity,
+            unitPrice: unitPrice
+        )
+    }
+}
+
+struct BackupPayment: Codable {
+    let id: UUID
+    let amount: Double
+    let methodRaw: Int
+    let reference: String?
+    let notes: String?
+    let paymentDate: Date
+    let createdAt: Date
+
+    init(from payment: Payment) {
+        self.id = payment.id
+        self.amount = payment.amount
+        self.methodRaw = payment.methodRaw
+        self.reference = payment.reference
+        self.notes = payment.notes
+        self.paymentDate = payment.paymentDate
+        self.createdAt = payment.createdAt
+    }
+
+    func toPayment() -> Payment {
+        Payment(
+            id: id,
+            amount: amount,
+            method: PaymentMethod(rawValue: methodRaw) ?? .cash,
+            reference: reference,
+            notes: notes,
+            paymentDate: paymentDate,
+            createdAt: createdAt
         )
     }
 }

@@ -54,40 +54,51 @@ struct SidebarView: View {
     var body: some View {
         List(selection: $selectedItem) {
             Section {
-                Label("Dashboard", systemImage: "chart.bar.fill")
-                    .tag(NavigationItem.dashboard)
+                NavigationLink(value: NavigationItem.dashboard) {
+                    Label("Dashboard", systemImage: "chart.bar.fill")
+                }
             }
 
             Section("Operations") {
-                Label("Parcels", systemImage: "shippingbox.fill")
-                    .tag(NavigationItem.parcels)
-                Label("Customers", systemImage: "person.2.fill")
-                    .tag(NavigationItem.customers)
-                Label("Drivers", systemImage: "car.fill")
-                    .tag(NavigationItem.drivers)
-                Label("Driver Schedule", systemImage: "calendar")
-                    .tag(NavigationItem.driverSchedule)
+                NavigationLink(value: NavigationItem.parcels) {
+                    Label("Parcels", systemImage: "shippingbox.fill")
+                }
+                NavigationLink(value: NavigationItem.customers) {
+                    Label("Customers", systemImage: "person.2.fill")
+                }
+                NavigationLink(value: NavigationItem.drivers) {
+                    Label("Drivers", systemImage: "car.fill")
+                }
+                NavigationLink(value: NavigationItem.driverSchedule) {
+                    Label("Driver Schedule", systemImage: "calendar")
+                }
             }
 
             Section("Billing") {
-                Label("Invoices", systemImage: "doc.text.fill")
-                    .tag(NavigationItem.invoices)
-                Label("Recurring Invoices", systemImage: "arrow.clockwise")
-                    .tag(NavigationItem.recurringInvoices)
-                Label("Pricing", systemImage: "dollarsign.circle.fill")
-                    .tag(NavigationItem.pricing)
+                NavigationLink(value: NavigationItem.invoices) {
+                    Label("Invoices", systemImage: "doc.text.fill")
+                }
+                NavigationLink(value: NavigationItem.recurringInvoices) {
+                    Label("Recurring Invoices", systemImage: "arrow.clockwise")
+                }
+                NavigationLink(value: NavigationItem.pricing) {
+                    Label("Pricing", systemImage: "dollarsign.circle.fill")
+                }
             }
 
             Section("Analytics") {
-                Label("Reports", systemImage: "chart.pie.fill")
-                    .tag(NavigationItem.reports)
-                Label("Delivery Map", systemImage: "map.fill")
-                    .tag(NavigationItem.map)
+                NavigationLink(value: NavigationItem.reports) {
+                    Label("Reports", systemImage: "chart.pie.fill")
+                }
+                NavigationLink(value: NavigationItem.map) {
+                    Label("Delivery Map", systemImage: "map.fill")
+                }
             }
 
             Section("System") {
-                Label("Settings", systemImage: "gear")
-                    .tag(NavigationItem.settings)
+                NavigationLink(value: NavigationItem.settings) {
+                    Label("Settings", systemImage: "gear")
+                }
             }
         }
         .navigationTitle("CourierPro")

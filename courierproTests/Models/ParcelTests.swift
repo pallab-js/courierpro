@@ -61,12 +61,12 @@ final class ParcelTests: XCTestCase {
     }
 
     func testParcelWithSenderAndReceiver() {
-        let sender = Customer(name: "Sender Corp")
-        let receiver = Customer(name: "Receiver Inc")
+        let sender = Customer(name: "Infosys Technologies")
+        let receiver = Customer(name: "Wipro Limited")
 
         let parcel = Parcel(sender: sender, receiver: receiver)
 
-        XCTAssertEqual(parcel.senderName, "Sender Corp")
-        XCTAssertEqual(parcel.receiverName, "Receiver Inc")
+        XCTAssertEqual(parcel.senderName, "Infosys Technologies")
+        XCTAssertEqual(parcel.receiverName, "Wipro Limited")
     }
 }

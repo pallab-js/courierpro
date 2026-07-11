@@ -86,7 +86,7 @@ struct DriverRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(driver.isAvailable ? Color.green : Color.orange)
+                .fill(!driver.isAvailable ? Color.red : (driver.isBusy ? Color.orange : Color.green))
                 .frame(width: 10, height: 10)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -106,15 +106,15 @@ struct DriverRow: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                Text(driver.isAvailable ? "Available" : "Busy")
+                Text(!driver.isAvailable ? "Unavailable" : (driver.isBusy ? "Busy" : "Available"))
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(driver.isAvailable ? .green : .orange)
+                    .foregroundColor(!driver.isAvailable ? .red : (driver.isBusy ? .orange : .green))
             }
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
+        .onTapGesture {
             onSelect()
         }
     }

@@ -38,13 +38,13 @@ struct DriverEditView: View {
 
                     HStack {
                         Text("Phone:")
-                        TextField("555-1000", text: $phone)
+                        TextField("9876543210", text: $phone)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     HStack {
                         Text("License #:")
-                        TextField("DL-001", text: $licenseNumber)
+                        TextField("e.g., DL-MH-001", text: $licenseNumber)
                             .textFieldStyle(.roundedBorder)
                     }
 
@@ -83,25 +83,30 @@ struct DriverEditView: View {
             return
         }
 
-        do {
-            try viewModel.updateDriver(
-                driver,
-                name: name,
-                phone: phone,
-                licenseNumber: licenseNumber,
-                isAvailable: isAvailable
-            )
-            dismiss()
-        } catch {
-            errorMessage = "Failed to save changes: \(error.localizedDescription)"
-            showingError = true
+        let trimmedPhone = phone.trimmingCharacters(in: .whitespaces)
+        if !trimmedPhone.isEmpty {
+            let digitsOnly = trimmedPhone.filter { $0.isNumber }
+            if digitsOnly.count != 10 {
+                errorMessage = "Phone number must be 10 digits"
+                showingError = true
+                return
+            }
         }
+
+        viewModel.updateDriver(
+            driver,
+            name: name,
+            phone: phone,
+            licenseNumber: licenseNumber,
+            isAvailable: isAvailable
+        )
+        dismiss()
     }
 }
 
 #Preview {
     DriverEditView(
-        driver: Driver(name: "John Smith", licenseNumber: "DL-001"),
+        driver: Driver(name: "Rajesh Kumar", licenseNumber: "DL-MH-001"),
         viewModel: DriverViewModel()
     )
 }

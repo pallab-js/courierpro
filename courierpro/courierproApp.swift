@@ -42,7 +42,7 @@ struct courierproApp: App {
 }
 
 extension Notification.Name {
-    static let navigateToParcels = Notification.Name("navigateToParcels")
-    static let navigateToCustomers = Notification.Name("navigateToCustomers")
-    static let navigateToDrivers = Notification.Name("navigateToDrivers")
+    static let navigateToParcels = Notification.Name("com.courierpro.navigateToParcels")
+    static let navigateToCustomers = Notification.Name("com.courierpro.navigateToCustomers")
+    static let navigateToDrivers = Notification.Name("com.courierpro.navigateToDrivers")
 }

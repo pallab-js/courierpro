@@ -7,10 +7,10 @@ struct AppSettings: Codable {
     var businessAddress: String = ""
     var businessPhone: String = ""
     var businessEmail: String = ""
-    var currencyCode: String = "USD"
-    var currencySymbol: String = "$"
-    var taxRate: Double = 0.0
-    var defaultNotes: String = ""
+    var currencyCode: String = "INR"
+    var currencySymbol: String = "₹"
+    var taxRate: Double = 18.0
+    var defaultNotes: String = "Thank you for your business!"
     var trackingPrefix: String = "CP"
 
     static let shared = AppSettings.load()
@@ -50,6 +50,7 @@ final class SettingsViewModel: ObservableObject {
     }
 
     static let currencies: [(code: String, symbol: String, name: String)] = [
+        ("INR", "₹", "Indian Rupee"),
         ("USD", "$", "US Dollar"),
         ("EUR", "€", "Euro"),
         ("GBP", "£", "British Pound"),
@@ -58,7 +59,6 @@ final class SettingsViewModel: ObservableObject {
         ("AUD", "A$", "Australian Dollar"),
         ("CHF", "CHF", "Swiss Franc"),
         ("CNY", "¥", "Chinese Yuan"),
-        ("INR", "₹", "Indian Rupee"),
         ("BRL", "R$", "Brazilian Real"),
     ]
 }

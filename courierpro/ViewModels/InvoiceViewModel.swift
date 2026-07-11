@@ -10,9 +10,14 @@ final class InvoiceViewModel: ObservableObject {
     @Published var pricingRules: [PricingRule] = []
     @Published var searchText: String = ""
     @Published var selectedStatus: InvoiceStatus?
-    @Published var isLoading = false
+    @Published var isLoadingInvoices = false
+    @Published var isLoadingPricingRules = false
     @Published var errorMessage: String?
     @Published var showError = false
+
+    var isLoading: Bool {
+        isLoadingInvoices || isLoadingPricingRules
+    }
 
     init(persistenceService: PersistenceService? = nil) {
         self.persistenceService = persistenceService ?? PersistenceService.shared
@@ -48,25 +53,25 @@ final class InvoiceViewModel: ObservableObject {
     }
 
     func loadInvoices() {
-        isLoading = true
-        defer { isLoading = false }
+        isLoadingInvoices = true
+        defer { isLoadingInvoices = false }
         do {
             let descriptor = FetchDescriptor<Invoice>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
             invoices = try persistenceService.fetch(descriptor)
         } catch {
-            errorMessage = "Failed to load invoices: \(error.localizedDescription)"
+            errorMessage = "Failed to load invoices"
             showError = true
         }
     }
 
     func loadPricingRules() {
-        isLoading = true
-        defer { isLoading = false }
+        isLoadingPricingRules = true
+        defer { isLoadingPricingRules = false }
         do {
             let descriptor = FetchDescriptor<PricingRule>(sortBy: [SortDescriptor(\.name)])
             pricingRules = try persistenceService.fetch(descriptor)
         } catch {
-            errorMessage = "Failed to load pricing rules: \(error.localizedDescription)"
+            errorMessage = "Failed to load pricing rules"
             showError = true
         }
     }
@@ -79,8 +84,13 @@ final class InvoiceViewModel: ObservableObject {
         dueDate: Date
     ) {
         do {
+            if pricingRules.isEmpty {
+                loadPricingRules()
+            }
+
+            let safeTaxRate = taxRate.isFinite ? max(0, min(taxRate, 100)) : 0
             let invoice = Invoice(
-                taxRate: taxRate,
+                taxRate: safeTaxRate,
                 notes: notes,
                 dueDate: dueDate,
                 customer: customer
@@ -103,7 +113,7 @@ final class InvoiceViewModel: ObservableObject {
             try persistenceService.save()
             loadInvoices()
         } catch {
-            errorMessage = "Failed to create invoice: \(error.localizedDescription)"
+            errorMessage = "Failed to create invoice"
             showError = true
         }
     }
@@ -118,15 +128,22 @@ final class InvoiceViewModel: ObservableObject {
             try persistenceService.save()
             loadInvoices()
         } catch {
-            errorMessage = "Failed to update invoice status: \(error.localizedDescription)"
+            errorMessage = "Failed to update invoice status"
             showError = true
         }
     }
 
     func addPayment(to invoice: Invoice, amount: Double, method: PaymentMethod, reference: String?) {
         do {
+            guard amount.isFinite, amount > 0 else {
+                errorMessage = "Invalid payment amount"
+                showError = true
+                return
+            }
+
+            let cappedAmount = min(amount, invoice.balanceDue)
             let payment = Payment(
-                amount: amount,
+                amount: cappedAmount,
                 method: method,
                 reference: reference,
                 invoice: invoice
@@ -141,7 +158,7 @@ final class InvoiceViewModel: ObservableObject {
             try persistenceService.save()
             loadInvoices()
         } catch {
-            errorMessage = "Failed to add payment: \(error.localizedDescription)"
+            errorMessage = "Failed to add payment"
             showError = true
         }
     }
@@ -152,15 +169,20 @@ final class InvoiceViewModel: ObservableObject {
             try persistenceService.save()
             loadInvoices()
         } catch {
-            errorMessage = "Failed to delete invoice: \(error.localizedDescription)"
+            errorMessage = "Failed to delete invoice"
             showError = true
         }
     }
 
     func calculatePrice(for parcel: Parcel) -> Double {
         let weight = parcel.weight
+        var distance: Double = 0
+        if let sender = parcel.sender, let receiver = parcel.receiver {
+            distance = RouteOptimizer.distance(from: sender.coordinate, to: receiver.coordinate)
+        }
         if let rule = pricingRules.first(where: { $0.isActive && $0.isApplicable(weight: weight) }) {
-            return rule.calculatePrice(weight: weight)
+            let price = rule.calculatePrice(weight: weight, distance: distance)
+            return price.isFinite ? max(0, price) : 10.0
         }
         return 10.0
     }
@@ -174,19 +196,24 @@ final class InvoiceViewModel: ObservableObject {
         maximumWeight: Double
     ) {
         do {
+            let safeBasePrice = basePrice.isFinite ? max(0, basePrice) : 0
+            let safePricePerUnit = pricePerUnit.isFinite ? max(0, pricePerUnit) : 0
+            let safeMinWeight = max(0, minimumWeight)
+            let safeMaxWeight = max(safeMinWeight, maximumWeight)
+
             let rule = PricingRule(
                 name: name,
                 pricingType: pricingType,
-                basePrice: basePrice,
-                pricePerUnit: pricePerUnit,
-                minimumWeight: minimumWeight,
-                maximumWeight: maximumWeight
+                basePrice: safeBasePrice,
+                pricePerUnit: safePricePerUnit,
+                minimumWeight: safeMinWeight,
+                maximumWeight: safeMaxWeight
             )
             persistenceService.insert(rule)
             try persistenceService.save()
             loadPricingRules()
         } catch {
-            errorMessage = "Failed to create pricing rule: \(error.localizedDescription)"
+            errorMessage = "Failed to create pricing rule"
             showError = true
         }
     }
@@ -202,18 +229,23 @@ final class InvoiceViewModel: ObservableObject {
         isActive: Bool
     ) {
         do {
+            let safeBasePrice = basePrice.isFinite ? max(0, basePrice) : 0
+            let safePricePerUnit = pricePerUnit.isFinite ? max(0, pricePerUnit) : 0
+            let safeMinWeight = max(0, minimumWeight)
+            let safeMaxWeight = max(safeMinWeight, maximumWeight)
+
             rule.name = name
             rule.pricingTypeRaw = pricingType.rawValue
-            rule.basePrice = basePrice
-            rule.pricePerUnit = pricePerUnit
-            rule.minimumWeight = minimumWeight
-            rule.maximumWeight = maximumWeight
+            rule.basePrice = safeBasePrice
+            rule.pricePerUnit = safePricePerUnit
+            rule.minimumWeight = safeMinWeight
+            rule.maximumWeight = safeMaxWeight
             rule.isActive = isActive
             rule.updatedAt = Date()
             try persistenceService.save()
             loadPricingRules()
         } catch {
-            errorMessage = "Failed to update pricing rule: \(error.localizedDescription)"
+            errorMessage = "Failed to update pricing rule"
             showError = true
         }
     }
@@ -224,7 +256,7 @@ final class InvoiceViewModel: ObservableObject {
             try persistenceService.save()
             loadPricingRules()
         } catch {
-            errorMessage = "Failed to delete pricing rule: \(error.localizedDescription)"
+            errorMessage = "Failed to delete pricing rule"
             showError = true
         }
     }

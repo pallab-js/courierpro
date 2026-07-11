@@ -1,6 +1,13 @@
 import Foundation
 
+@MainActor
 struct CSVExporter {
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return formatter
+    }()
+
     static func exportParcels(_ parcels: [Parcel]) -> String {
         var csv = "Tracking Number,Status,Weight (kg),Dimensions,Sender,Receiver,Driver,Created,Delivered\n"
         for parcel in parcels {
@@ -14,7 +21,7 @@ struct CSVExporter {
                 parcel.driverName,
                 formatDate(parcel.createdAt),
                 parcel.deliveredAt.map(formatDate) ?? ""
-            ].joined(separator: ",")
+            ].map { escapeCSV($0) }.joined(separator: ",")
             csv += row + "\n"
         }
         return csv
@@ -51,21 +58,31 @@ struct CSVExporter {
     }
 
     private static func escapeCSV(_ value: String) -> String {
-        if value.contains(",") || value.contains("\"") || value.contains("\n") {
-            return "\"\(value.replacingOccurrences(of: "\"", with: "\"\""))\""
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let formulaPrefixes: [Character] = ["=", "+", "-", "@", "\t", "\r"]
+        let escaped: String
+        if let first = trimmed.first, formulaPrefixes.contains(first) {
+            escaped = "'" + trimmed
+        } else {
+            escaped = trimmed
         }
-        return value
+        if escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n") {
+            return "\"\(escaped.replacingOccurrences(of: "\"", with: "\"\""))\""
+        }
+        return escaped
     }
 
     private static func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        return formatter.string(from: date)
+        dateFormatter.string(from: date)
     }
 }
 
 struct CSVImporter {
+    private static let maxFileSize = 10_000_000 // 10MB
+    private static let maxFieldNameLength = 200
+
     static func importCustomers(from csv: String) -> [Customer] {
+        guard csv.count <= maxFileSize else { return [] }
         let lines = csv.components(separatedBy: .newlines).filter { !$0.isEmpty }
         guard lines.count > 1 else { return [] }
 
@@ -74,13 +91,16 @@ struct CSVImporter {
             let fields = parseCSVLine(line)
             guard fields.count >= 6 else { continue }
 
+            let name = String(fields[0].prefix(maxFieldNameLength)).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { continue }
+
             let customer = Customer(
-                name: fields[0],
-                email: fields[1],
-                phone: fields[2],
-                address: fields[3],
-                city: fields[4],
-                postalCode: fields[5]
+                name: name,
+                email: String(fields[1].prefix(maxFieldNameLength)).trimmingCharacters(in: .whitespacesAndNewlines),
+                phone: String(fields[2].prefix(20)).filter { $0.isNumber || $0 == "+" },
+                address: String(fields[3].prefix(maxFieldNameLength)).trimmingCharacters(in: .whitespacesAndNewlines),
+                city: String(fields[4].prefix(100)).trimmingCharacters(in: .whitespacesAndNewlines),
+                postalCode: String(fields[5].prefix(10)).filter { $0.isNumber }
             )
             customers.append(customer)
         }
@@ -88,6 +108,7 @@ struct CSVImporter {
     }
 
     static func importDrivers(from csv: String) -> [Driver] {
+        guard csv.count <= maxFileSize else { return [] }
         let lines = csv.components(separatedBy: .newlines).filter { !$0.isEmpty }
         guard lines.count > 1 else { return [] }
 
@@ -96,10 +117,13 @@ struct CSVImporter {
             let fields = parseCSVLine(line)
             guard fields.count >= 4 else { continue }
 
+            let name = String(fields[0].prefix(maxFieldNameLength)).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { continue }
+
             let driver = Driver(
-                name: fields[0],
-                phone: fields[1],
-                licenseNumber: fields[2],
+                name: name,
+                phone: String(fields[1].prefix(20)).filter { $0.isNumber || $0 == "+" },
+                licenseNumber: String(fields[2].prefix(50)).trimmingCharacters(in: .whitespacesAndNewlines),
                 isAvailable: fields[3].lowercased() == "yes" || fields[3] == "1"
             )
             drivers.append(driver)
@@ -111,18 +135,35 @@ struct CSVImporter {
         var fields: [String] = []
         var current = ""
         var inQuotes = false
+        var chars = line.makeIterator()
 
-        for char in line {
+        while let char = chars.next() {
             if char == "\"" {
-                inQuotes.toggle()
+                if inQuotes {
+                    if let next = chars.next() {
+                        if next == "\"" {
+                            current.append("\"")
+                        } else if next == "," {
+                            fields.append(current.trimmingCharacters(in: .whitespacesAndNewlines))
+                            current = ""
+                        } else {
+                            inQuotes = false
+                            current.append(next)
+                        }
+                    } else {
+                        inQuotes = false
+                    }
+                } else {
+                    inQuotes = true
+                }
             } else if char == "," && !inQuotes {
-                fields.append(current.trimmingCharacters(in: .whitespaces))
+                fields.append(current.trimmingCharacters(in: .whitespacesAndNewlines))
                 current = ""
             } else {
                 current.append(char)
             }
         }
-        fields.append(current.trimmingCharacters(in: .whitespaces))
+        fields.append(current.trimmingCharacters(in: .whitespacesAndNewlines))
         return fields
     }
 }

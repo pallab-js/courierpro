@@ -17,7 +17,7 @@ final class PersistenceServiceTests: XCTestCase {
     }
 
     func testSaveAndFetch() throws {
-        let customer = Customer(name: "Test Customer")
+        let customer = Customer(name: "HDFC Bank")
         persistenceService.insert(customer)
         try persistenceService.save()
 
@@ -25,11 +25,11 @@ final class PersistenceServiceTests: XCTestCase {
         let fetched = try persistenceService.fetch(descriptor)
 
         XCTAssertEqual(fetched.count, 1)
-        XCTAssertEqual(fetched.first?.name, "Test Customer")
+        XCTAssertEqual(fetched.first?.name, "HDFC Bank")
     }
 
     func testDelete() throws {
-        let customer = Customer(name: "Test Customer")
+        let customer = Customer(name: "HDFC Bank")
         persistenceService.insert(customer)
         try persistenceService.save()
 
@@ -43,8 +43,8 @@ final class PersistenceServiceTests: XCTestCase {
     }
 
     func testDeleteMultiple() throws {
-        let customer1 = Customer(name: "Customer 1")
-        let customer2 = Customer(name: "Customer 2")
+        let customer1 = Customer(name: "HDFC Bank")
+        let customer2 = Customer(name: "ICICI Bank")
         persistenceService.insert(customer1)
         persistenceService.insert(customer2)
         try persistenceService.save()

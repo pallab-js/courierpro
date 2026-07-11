@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import SwiftUI
 
 enum InvoiceStatus: Int, Codable, CaseIterable, Identifiable {
     case draft = 0
@@ -30,13 +31,13 @@ enum InvoiceStatus: Int, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var color: String {
+    var color: Color {
         switch self {
-        case .draft: return "gray"
-        case .pending: return "orange"
-        case .paid: return "green"
-        case .overdue: return "red"
-        case .cancelled: return "gray"
+        case .draft: return .gray
+        case .pending: return .orange
+        case .paid: return .green
+        case .overdue: return .red
+        case .cancelled: return .gray
         }
     }
 }
@@ -83,9 +84,9 @@ final class Invoice {
         self.invoiceNumber = invoiceNumber.isEmpty ? Self.generateInvoiceNumber() : invoiceNumber
         self.statusRaw = status.rawValue
         self.subtotal = subtotal
-        self.taxRate = taxRate
-        self.taxAmount = subtotal * taxRate / 100
-        self.totalAmount = subtotal + (subtotal * taxRate / 100)
+        self.taxRate = max(0, min(taxRate, 100))
+        self.taxAmount = subtotal * max(0, min(taxRate, 100)) / 100
+        self.totalAmount = subtotal + (subtotal * max(0, min(taxRate, 100)) / 100)
         self.notes = notes
         self.dueDate = dueDate
         self.customer = customer
@@ -101,9 +102,10 @@ final class Invoice {
     }
 
     func recalculateTotals() {
-        subtotal = items?.reduce(0) { $0 + $1.totalPrice } ?? 0
-        taxAmount = subtotal * taxRate / 100
-        totalAmount = subtotal + taxAmount
+        let safeSubtotal = items?.reduce(0) { $0 + $1.totalPrice } ?? 0
+        subtotal = safeSubtotal
+        taxAmount = safeSubtotal * taxRate / 100
+        totalAmount = safeSubtotal + taxAmount
     }
 
     var totalPaid: Double {

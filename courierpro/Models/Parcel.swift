@@ -42,7 +42,7 @@ final class Parcel {
         self.id = id
         self.trackingNumber = trackingNumber.isEmpty ? Self.generateTrackingNumber() : trackingNumber
         self.statusRaw = status.rawValue
-        self.weight = weight
+        self.weight = weight.isFinite ? max(0, weight) : 0
         self.dimensions = dimensions
         self.notes = notes
         self.sender = sender

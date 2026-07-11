@@ -98,6 +98,7 @@ struct DashboardView: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(color.opacity(0.1))
             )
+            .contentShape(RoundedRectangle(cornerRadius: 10))
         }
         .buttonStyle(.plain)
     }
@@ -127,7 +128,7 @@ struct DashboardView: View {
                 )
                 KPICard(
                     title: "In Transit",
-                    value: "\(parcelViewModel.parcels.filter { $0.status == .inTransit }.count)",
+                    value: "\(parcelViewModel.inTransitCount)",
                     icon: "truck.fill",
                     gradient: LinearGradient(
                         colors: [.purple, .purple.opacity(0.7)],
@@ -137,7 +138,7 @@ struct DashboardView: View {
                 )
                 KPICard(
                     title: "Delivered",
-                    value: "\(parcelViewModel.parcels.filter { $0.status == .delivered }.count)",
+                    value: "\(parcelViewModel.deliveredCount)",
                     icon: "checkmark.circle.fill",
                     gradient: LinearGradient(
                         colors: [.green, .green.opacity(0.7)],
@@ -147,7 +148,7 @@ struct DashboardView: View {
                 )
                 KPICard(
                     title: "Revenue",
-                    value: String(format: "$%.0f", invoiceViewModel.totalRevenue),
+                    value: String(format: "\(AppSettings.shared.currencySymbol)%.0f", invoiceViewModel.totalRevenue),
                     icon: "dollarsign.circle.fill",
                     gradient: LinearGradient(
                         colors: [.orange, .orange.opacity(0.7)],
@@ -206,7 +207,7 @@ struct DashboardView: View {
                 HStack(spacing: 10) {
                     Image(systemName: status.systemImage)
                         .font(.caption)
-                        .foregroundColor(statusColor(status))
+                        .foregroundColor(status.color)
                         .frame(width: 16)
 
                     Text(status.displayName)
@@ -218,7 +219,7 @@ struct DashboardView: View {
                             Capsule()
                                 .fill(Color.gray.opacity(0.12))
                             Capsule()
-                                .fill(statusColor(status))
+                                .fill(status.color)
                                 .frame(width: geo.size.width * pct)
                         }
                     }
@@ -241,9 +242,9 @@ struct DashboardView: View {
             Text("Financial Overview")
                 .font(.headline)
 
-            revenueRow(title: "Revenue", value: String(format: "$%.2f", invoiceViewModel.totalRevenue), icon: "dollarsign.circle.fill", color: .green)
-            revenueRow(title: "Pending", value: String(format: "$%.2f", invoiceViewModel.pendingAmount), icon: "clock.fill", color: .orange)
-            revenueRow(title: "Overdue", value: String(format: "$%.2f", invoiceViewModel.overdueAmount), icon: "exclamationmark.triangle.fill", color: .red)
+            revenueRow(title: "Revenue", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", invoiceViewModel.totalRevenue), icon: "dollarsign.circle.fill", color: .green)
+            revenueRow(title: "Pending", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", invoiceViewModel.pendingAmount), icon: "clock.fill", color: .orange)
+            revenueRow(title: "Overdue", value: String(format: "\(AppSettings.shared.currencySymbol)%.2f", invoiceViewModel.overdueAmount), icon: "exclamationmark.triangle.fill", color: .red)
 
             Divider()
 
@@ -345,15 +346,15 @@ struct DashboardView: View {
 
             HStack(spacing: 3) {
                 Circle()
-                    .fill(statusColor(parcel.status))
+                    .fill(parcel.status.color)
                     .frame(width: 5, height: 5)
                 Text(parcel.status.displayName)
             }
             .font(.caption2)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
-            .background(statusColor(parcel.status).opacity(0.1))
-            .foregroundColor(statusColor(parcel.status))
+            .background(parcel.status.color.opacity(0.1))
+            .foregroundColor(parcel.status.color)
             .cornerRadius(4)
             .frame(width: 100, alignment: .center)
 
@@ -411,16 +412,6 @@ struct DashboardView: View {
         .frame(height: 120)
     }
 
-    private func statusColor(_ status: DeliveryStatus) -> Color {
-        switch status {
-        case .created: return .blue
-        case .pickedUp: return .orange
-        case .inTransit: return .purple
-        case .outForDelivery: return .yellow
-        case .delivered: return .green
-        case .failed: return .red
-        }
-    }
 }
 
 // MARK: - KPI Card
@@ -447,6 +438,7 @@ struct KPICard: View {
                 .foregroundColor(.white.opacity(0.85))
         }
         .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(gradient)

@@ -54,6 +54,7 @@ struct InvoiceDetailView: View {
         } message: {
             Text("Are you sure you want to delete invoice \(invoice.invoiceNumber)? This action cannot be undone.")
         }
+        .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
     }
 
     private var headerSection: some View {
@@ -98,25 +99,25 @@ struct InvoiceDetailView: View {
                 HStack {
                     Text("Subtotal:")
                         .foregroundColor(.secondary)
-                    Text(String(format: "$%.2f", invoice.subtotal))
+                    Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", invoice.subtotal))")
                 }
                 HStack {
                     Text("Tax (\(String(format: "%.1f", invoice.taxRate))%):")
                         .foregroundColor(.secondary)
-                    Text(String(format: "$%.2f", invoice.taxAmount))
+                    Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", invoice.taxAmount))")
                 }
                 Divider()
                 HStack {
                     Text("Total:")
                         .fontWeight(.bold)
-                    Text(String(format: "$%.2f", invoice.totalAmount))
+                    Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", invoice.totalAmount))")
                         .fontWeight(.bold)
                 }
                 if invoice.totalPaid > 0 {
                     HStack {
                         Text("Paid:")
                             .foregroundColor(.green)
-                        Text(String(format: "$%.2f", invoice.totalPaid))
+                        Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", invoice.totalPaid))")
                             .foregroundColor(.green)
                     }
                 }
@@ -124,7 +125,7 @@ struct InvoiceDetailView: View {
                     Text("Balance Due:")
                         .fontWeight(.bold)
                         .foregroundColor(invoice.balanceDue > 0 ? .orange : .green)
-                    Text(String(format: "$%.2f", invoice.balanceDue))
+                    Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", invoice.balanceDue))")
                         .fontWeight(.bold)
                         .foregroundColor(invoice.balanceDue > 0 ? .orange : .green)
                 }
@@ -142,9 +143,9 @@ struct InvoiceDetailView: View {
                     HStack {
                         Text(item.itemDescription)
                         Spacer()
-                        Text("\(item.quantity) x $\(String(format: "%.2f", item.unitPrice))")
+                        Text("\(item.quantity) x \(AppSettings.shared.currencySymbol)\(String(format: "%.2f", item.unitPrice))")
                             .foregroundColor(.secondary)
-                        Text(String(format: "$%.2f", item.totalPrice))
+                        Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", item.totalPrice))")
                             .fontWeight(.medium)
                             .frame(width: 80, alignment: .trailing)
                     }
@@ -182,7 +183,7 @@ struct InvoiceDetailView: View {
                             }
                         }
                         Spacer()
-                        Text(String(format: "$%.2f", payment.amount))
+                        Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", payment.amount))")
                             .fontWeight(.medium)
                             .foregroundColor(.green)
                     }

@@ -13,11 +13,11 @@ final class DataSeeder {
         guard existingCustomers.isEmpty else { return }
 
         let customers = [
-            Customer(name: "Acme Corp", email: "info@acme.com", phone: "555-0101", address: "123 Business St", city: "San Francisco", postalCode: "94102", latitude: 37.7749, longitude: -122.4194),
-            Customer(name: "TechStart Inc", email: "hello@techstart.io", phone: "555-0102", address: "456 Innovation Ave", city: "San Jose", postalCode: "95112", latitude: 37.3382, longitude: -121.8863),
-            Customer(name: "Global Logistics", email: "ops@globallog.com", phone: "555-0103", address: "789 Shipping Blvd", city: "Oakland", postalCode: "94601", latitude: 37.8044, longitude: -122.2712),
-            Customer(name: "Quick Deliver", email: "service@quickdel.com", phone: "555-0104", address: "321 Express Way", city: "Berkeley", postalCode: "94704", latitude: 37.8716, longitude: -122.2727),
-            Customer(name: "Retail Plus", email: "orders@retailplus.com", phone: "555-0105", address: "654 Commerce Dr", city: "Palo Alto", postalCode: "94301", latitude: 37.4419, longitude: -122.1430),
+            Customer(name: "Reliance Retail", email: "orders@reliance.in", phone: "9876543210", address: "Maker Chambers IV, 222 Nariman Point", city: "Mumbai", postalCode: "400021", latitude: 18.9220, longitude: 72.8347),
+            Customer(name: "Tata Steel Ltd", email: "logistics@tatasteel.com", phone: "9876543211", address: "Bistupur, Jamshedpur", city: "Jamshedpur", postalCode: "831001", latitude: 22.8046, longitude: 86.2029),
+            Customer(name: "Infosys Technologies", email: "supply@infosys.com", phone: "9876543212", address: "Electronics City, Hosur Road", city: "Bangalore", postalCode: "560100", latitude: 12.8456, longitude: 77.6603),
+            Customer(name: "Wipro Limited", email: "procurement@wipro.com", phone: "9876543213", address: "Doddakannelli, Sarjapur Road", city: "Bangalore", postalCode: "560035", latitude: 12.9121, longitude: 77.6446),
+            Customer(name: "HDFC Bank", email: "operations@hdfcbank.com", phone: "9876543214", address: "HDFC Bank House, Senapati Bapat Marg", city: "Pune", postalCode: "411013", latitude: 18.5309, longitude: 73.8475),
         ]
 
         for customer in customers {
@@ -25,9 +25,9 @@ final class DataSeeder {
         }
 
         let drivers = [
-            Driver(name: "John Smith", phone: "555-1001", licenseNumber: "DL-001"),
-            Driver(name: "Maria Garcia", phone: "555-1002", licenseNumber: "DL-002"),
-            Driver(name: "David Chen", phone: "555-1003", licenseNumber: "DL-003"),
+            Driver(name: "Rajesh Kumar", phone: "9876500001", licenseNumber: "DL-MH-001"),
+            Driver(name: "Priya Sharma", phone: "9876500002", licenseNumber: "DL-KA-002"),
+            Driver(name: "Amit Patel", phone: "9876500003", licenseNumber: "DL-GJ-003"),
         ]
 
         for driver in drivers {

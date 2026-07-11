@@ -7,7 +7,7 @@ struct InvoiceFormView: View {
 
     @State private var selectedCustomer: Customer?
     @State private var selectedParcels: Set<Parcel> = []
-    @State private var taxRate: String = "10"
+    @State private var taxRate: String = "18"
     @State private var notes: String = ""
     @State private var dueDate = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date()
 
@@ -59,7 +59,7 @@ struct InvoiceFormView: View {
                                     }
                                 }
                                 Spacer()
-                                Text(String(format: "$%.2f", viewModel.calculatePrice(for: parcel)))
+                                Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", viewModel.calculatePrice(for: parcel)))")
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -121,7 +121,12 @@ struct InvoiceFormView: View {
 
         let parcelViewModel = ParcelViewModel()
         try? parcelViewModel.loadParcels()
-        availableParcels = parcelViewModel.parcels.filter { $0.status == .delivered }
+
+        let itemDescriptor = FetchDescriptor<InvoiceItem>()
+        let existingItems = (try? PersistenceService.shared.fetch(itemDescriptor)) ?? []
+        let invoicedParcelIds = Set(existingItems.compactMap { $0.parcel?.id })
+
+        availableParcels = parcelViewModel.parcels.filter { $0.status == .delivered && !invoicedParcelIds.contains($0.id) }
     }
 
     private func createInvoice() {
@@ -131,7 +136,14 @@ struct InvoiceFormView: View {
             return
         }
 
-        let taxRateValue = Double(taxRate) ?? 0
+        guard let taxRateValue = Double(taxRate),
+              taxRateValue.isFinite,
+              taxRateValue >= 0,
+              taxRateValue <= 100 else {
+            errorMessage = "Tax rate must be between 0 and 100"
+            showingError = true
+            return
+        }
 
         do {
             try viewModel.createInvoice(
@@ -143,7 +155,7 @@ struct InvoiceFormView: View {
             )
             dismiss()
         } catch {
-            errorMessage = "Failed to create invoice: \(error.localizedDescription)"
+            errorMessage = "Failed to create invoice"
             showingError = true
         }
     }

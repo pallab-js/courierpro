@@ -62,7 +62,7 @@ struct DeliveryMapView: View {
                         MapPolyline(
                             coordinates: [sender.coordinate, receiver.coordinate]
                         )
-                        .stroke(statusColor(parcel.status), lineWidth: 2)
+                        .stroke(parcel.status.color, lineWidth: 2)
                     }
                 }
             }
@@ -71,14 +71,4 @@ struct DeliveryMapView: View {
         .padding()
     }
 
-    private func statusColor(_ status: DeliveryStatus) -> Color {
-        switch status {
-        case .created: return .blue
-        case .pickedUp: return .orange
-        case .inTransit: return .purple
-        case .outForDelivery: return .yellow
-        case .delivered: return .green
-        case .failed: return .red
-        }
-    }
 }

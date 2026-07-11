@@ -14,6 +14,11 @@ final class Driver {
     @Relationship(deleteRule: .nullify, inverse: \Parcel.driver)
     var assignedParcels: [Parcel]?
 
+    var isBusy: Bool {
+        guard let parcels = assignedParcels else { return false }
+        return parcels.contains { $0.status != .delivered && $0.status != .failed }
+    }
+
     init(
         id: UUID = UUID(),
         name: String,

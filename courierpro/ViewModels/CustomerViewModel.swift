@@ -34,7 +34,7 @@ final class CustomerViewModel: ObservableObject {
             let descriptor = FetchDescriptor<Customer>(sortBy: [SortDescriptor(\.name)])
             customers = try persistenceService.fetch(descriptor)
         } catch {
-            errorMessage = "Failed to load customers: \(error.localizedDescription)"
+            errorMessage = "Failed to load customers"
             showError = true
         }
     }
@@ -48,19 +48,36 @@ final class CustomerViewModel: ObservableObject {
         postalCode: String
     ) {
         do {
+            let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedName.isEmpty else {
+                errorMessage = "Customer name is required"
+                showError = true
+                return
+            }
+
+            let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if !trimmedEmail.isEmpty {
+                let allCustomers = try? persistenceService.fetch(FetchDescriptor<Customer>())
+                if let matches = allCustomers?.filter({ $0.email.lowercased() == trimmedEmail }), !matches.isEmpty {
+                    errorMessage = "A customer with this email already exists"
+                    showError = true
+                    return
+                }
+            }
+
             let customer = Customer(
-                name: name,
-                email: email,
-                phone: phone,
-                address: address,
-                city: city,
-                postalCode: postalCode
+                name: trimmedName,
+                email: trimmedEmail,
+                phone: phone.trimmingCharacters(in: .whitespacesAndNewlines),
+                address: address.trimmingCharacters(in: .whitespacesAndNewlines),
+                city: city.trimmingCharacters(in: .whitespacesAndNewlines),
+                postalCode: postalCode.trimmingCharacters(in: .whitespacesAndNewlines)
             )
             persistenceService.insert(customer)
             try persistenceService.save()
             loadCustomers()
         } catch {
-            errorMessage = "Failed to create customer: \(error.localizedDescription)"
+            errorMessage = "Failed to create customer"
             showError = true
         }
     }
@@ -75,28 +92,48 @@ final class CustomerViewModel: ObservableObject {
         postalCode: String
     ) {
         do {
-            customer.name = name
-            customer.email = email
-            customer.phone = phone
-            customer.address = address
-            customer.city = city
-            customer.postalCode = postalCode
+            let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if !trimmedEmail.isEmpty {
+                let allCustomers = try? persistenceService.fetch(FetchDescriptor<Customer>())
+                if let matches = allCustomers?.filter({ $0.email.lowercased() == trimmedEmail && $0.id != customer.id }), !matches.isEmpty {
+                    errorMessage = "A customer with this email already exists"
+                    showError = true
+                    return
+                }
+            }
+
+            customer.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            customer.email = trimmedEmail
+            customer.phone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+            customer.address = address.trimmingCharacters(in: .whitespacesAndNewlines)
+            customer.city = city.trimmingCharacters(in: .whitespacesAndNewlines)
+            customer.postalCode = postalCode.trimmingCharacters(in: .whitespacesAndNewlines)
             customer.updatedAt = Date()
             try persistenceService.save()
             loadCustomers()
         } catch {
-            errorMessage = "Failed to update customer: \(error.localizedDescription)"
+            errorMessage = "Failed to update customer"
             showError = true
         }
     }
 
     func deleteCustomer(_ customer: Customer) {
         do {
+            let allParcels = try? persistenceService.fetch(FetchDescriptor<Parcel>())
+            let linkedParcels = allParcels?.filter { parcel in
+                parcel.sender?.id == customer.id || parcel.receiver?.id == customer.id
+            }
+            if let parcels = linkedParcels, !parcels.isEmpty {
+                errorMessage = "Cannot delete customer with linked parcels"
+                showError = true
+                return
+            }
+
             persistenceService.delete(customer)
             try persistenceService.save()
             loadCustomers()
         } catch {
-            errorMessage = "Failed to delete customer: \(error.localizedDescription)"
+            errorMessage = "Failed to delete customer"
             showError = true
         }
     }

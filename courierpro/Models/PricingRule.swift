@@ -50,23 +50,25 @@ final class PricingRule {
         self.id = id
         self.name = name
         self.pricingTypeRaw = pricingType.rawValue
-        self.basePrice = basePrice
-        self.pricePerUnit = pricePerUnit
-        self.minimumWeight = minimumWeight
-        self.maximumWeight = maximumWeight
+        self.basePrice = basePrice.isFinite ? max(0, basePrice) : 0
+        self.pricePerUnit = pricePerUnit.isFinite ? max(0, pricePerUnit) : 0
+        self.minimumWeight = max(0, minimumWeight)
+        self.maximumWeight = max(minimumWeight, maximumWeight)
         self.isActive = isActive
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
 
     func calculatePrice(weight: Double, distance: Double = 0) -> Double {
+        let safeWeight = weight.isFinite ? weight : 0
+        let safeDistance = distance.isFinite ? distance : 0
         switch pricingType {
         case .flatRate:
             return basePrice
         case .perKg:
-            return basePrice + (weight * pricePerUnit)
+            return basePrice + (safeWeight * pricePerUnit)
         case .perKm:
-            return basePrice + (distance * pricePerUnit)
+            return basePrice + (safeDistance * pricePerUnit)
         }
     }
 

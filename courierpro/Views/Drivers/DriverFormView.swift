@@ -28,13 +28,13 @@ struct DriverFormView: View {
 
                     HStack {
                         Text("Phone:")
-                        TextField("555-1000", text: $phone)
+                        TextField("9876543210", text: $phone)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     HStack {
                         Text("License #:")
-                        TextField("DL-001", text: $licenseNumber)
+                        TextField("e.g., DL-MH-001", text: $licenseNumber)
                             .textFieldStyle(.roundedBorder)
                     }
 
@@ -73,18 +73,23 @@ struct DriverFormView: View {
             return
         }
 
-        do {
-            try viewModel.createDriver(
-                name: name,
-                phone: phone,
-                licenseNumber: licenseNumber,
-                isAvailable: isAvailable
-            )
-            dismiss()
-        } catch {
-            errorMessage = "Failed to add driver: \(error.localizedDescription)"
-            showingError = true
+        let trimmedPhone = phone.trimmingCharacters(in: .whitespaces)
+        if !trimmedPhone.isEmpty {
+            let digitsOnly = trimmedPhone.filter { $0.isNumber }
+            if digitsOnly.count != 10 {
+                errorMessage = "Phone number must be 10 digits"
+                showingError = true
+                return
+            }
         }
+
+        viewModel.createDriver(
+            name: name,
+            phone: phone,
+            licenseNumber: licenseNumber,
+            isAvailable: isAvailable
+        )
+        dismiss()
     }
 }
 

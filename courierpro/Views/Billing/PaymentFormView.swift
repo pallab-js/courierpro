@@ -24,7 +24,7 @@ struct PaymentFormView: View {
                 .fontDesign(.monospaced)
                 .foregroundColor(.secondary)
 
-            Text("Balance Due: $\(String(format: "%.2f", invoice.balanceDue))")
+            Text("Balance Due: \(AppSettings.shared.currencySymbol)\(String(format: "%.2f", invoice.balanceDue))")
                 .font(.headline)
                 .foregroundColor(.orange)
 
@@ -86,7 +86,7 @@ struct PaymentFormView: View {
     }
 
     private func recordPayment() {
-        guard let amountValue = Double(amount), amountValue > 0 else {
+        guard let amountValue = Double(amount), amountValue.isFinite, amountValue > 0 else {
             errorMessage = "Please enter a valid amount"
             showingError = true
             return
@@ -103,11 +103,11 @@ struct PaymentFormView: View {
                 to: invoice,
                 amount: amountValue,
                 method: selectedMethod,
-                reference: reference.isEmpty ? nil : reference
+                reference: reference.isEmpty ? nil : reference.trimmingCharacters(in: .whitespacesAndNewlines)
             )
             dismiss()
         } catch {
-            errorMessage = "Failed to record payment: \(error.localizedDescription)"
+            errorMessage = "Failed to record payment"
             showingError = true
         }
     }

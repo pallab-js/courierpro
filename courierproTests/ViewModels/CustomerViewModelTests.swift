@@ -25,52 +25,52 @@ final class CustomerViewModelTests: XCTestCase {
 
     func testCreateCustomer() {
         viewModel.createCustomer(
-            name: "Acme Corp",
-            email: "info@acme.com",
-            phone: "555-0101",
-            address: "123 Business St",
-            city: "San Francisco",
-            postalCode: "94102"
+            name: "Reliance Retail Ltd",
+            email: "orders@reliance.in",
+            phone: "9876543210",
+            address: "Maker Chambers IV, 222 Nariman Point",
+            city: "Mumbai",
+            postalCode: "400021"
         )
 
         XCTAssertEqual(viewModel.customers.count, 1)
-        XCTAssertEqual(viewModel.customers.first?.name, "Acme Corp")
-        XCTAssertEqual(viewModel.customers.first?.email, "info@acme.com")
+        XCTAssertEqual(viewModel.customers.first?.name, "Reliance Retail Ltd")
+        XCTAssertEqual(viewModel.customers.first?.email, "orders@reliance.in")
     }
 
     func testUpdateCustomer() {
         viewModel.createCustomer(
-            name: "Acme Corp",
-            email: "info@acme.com",
-            phone: "555-0101",
-            address: "123 Business St",
-            city: "San Francisco",
-            postalCode: "94102"
+            name: "Reliance Retail Ltd",
+            email: "orders@reliance.in",
+            phone: "9876543210",
+            address: "Maker Chambers IV, 222 Nariman Point",
+            city: "Mumbai",
+            postalCode: "400021"
         )
 
         let customer = viewModel.customers.first!
         viewModel.updateCustomer(
             customer,
-            name: "Acme Corporation",
-            email: "updated@acme.com",
-            phone: "555-0199",
-            address: "456 New St",
-            city: "San Jose",
-            postalCode: "95112"
+            name: "Reliance Industries Ltd",
+            email: "logistics@ril.com",
+            phone: "9876543299",
+            address: "Vivek Compound, 23rd Road",
+            city: "Mumbai",
+            postalCode: "400052"
         )
 
-        XCTAssertEqual(viewModel.customers.first?.name, "Acme Corporation")
-        XCTAssertEqual(viewModel.customers.first?.email, "updated@acme.com")
+        XCTAssertEqual(viewModel.customers.first?.name, "Reliance Industries Ltd")
+        XCTAssertEqual(viewModel.customers.first?.email, "logistics@ril.com")
     }
 
     func testDeleteCustomer() {
         viewModel.createCustomer(
-            name: "Acme Corp",
-            email: "info@acme.com",
-            phone: "555-0101",
-            address: "123 Business St",
-            city: "San Francisco",
-            postalCode: "94102"
+            name: "Reliance Retail Ltd",
+            email: "orders@reliance.in",
+            phone: "9876543210",
+            address: "Maker Chambers IV, 222 Nariman Point",
+            city: "Mumbai",
+            postalCode: "400021"
         )
 
         XCTAssertEqual(viewModel.customers.count, 1)
@@ -83,28 +83,28 @@ final class CustomerViewModelTests: XCTestCase {
 
     func testFilteredCustomers() {
         viewModel.createCustomer(
-            name: "Acme Corp",
-            email: "info@acme.com",
-            phone: "555-0101",
-            address: "123 Business St",
-            city: "San Francisco",
-            postalCode: "94102"
+            name: "Reliance Retail Ltd",
+            email: "orders@reliance.in",
+            phone: "9876543210",
+            address: "Maker Chambers IV, 222 Nariman Point",
+            city: "Mumbai",
+            postalCode: "400021"
         )
 
         viewModel.createCustomer(
-            name: "TechStart Inc",
-            email: "hello@techstart.io",
-            phone: "555-0102",
-            address: "456 Innovation Ave",
-            city: "San Jose",
-            postalCode: "95112"
+            name: "Tata Consultancy Services",
+            email: "supply@tcs.com",
+            phone: "9876543211",
+            address: "TCS Campus, Whitefield",
+            city: "Bangalore",
+            postalCode: "560066"
         )
 
-        viewModel.searchText = "Acme"
+        viewModel.searchText = "Reliance"
         XCTAssertEqual(viewModel.filteredCustomers.count, 1)
 
-        viewModel.searchText = "San"
-        XCTAssertEqual(viewModel.filteredCustomers.count, 2)
+        viewModel.searchText = "Mumbai"
+        XCTAssertEqual(viewModel.filteredCustomers.count, 1)
 
         viewModel.searchText = "nonexistent"
         XCTAssertEqual(viewModel.filteredCustomers.count, 0)

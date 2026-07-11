@@ -4,6 +4,7 @@ struct ParcelListView: View {
     @StateObject private var viewModel = ParcelViewModel()
     @State private var showingCreateSheet = false
     @State private var viewingParcel: Parcel?
+    @State private var statusUpdateConfirmation: (parcel: Parcel, status: DeliveryStatus)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -114,7 +115,7 @@ struct ParcelRow: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
+        .onTapGesture {
             onSelect()
         }
     }
@@ -132,20 +133,9 @@ struct StatusBadge: View {
         .font(.caption)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(backgroundColor.opacity(0.2))
-        .foregroundColor(backgroundColor)
+        .background(status.color.opacity(0.2))
+        .foregroundColor(status.color)
         .cornerRadius(8)
-    }
-
-    private var backgroundColor: Color {
-        switch status {
-        case .created: return .blue
-        case .pickedUp: return .orange
-        case .inTransit: return .purple
-        case .outForDelivery: return .yellow
-        case .delivered: return .green
-        case .failed: return .red
-        }
     }
 }
 

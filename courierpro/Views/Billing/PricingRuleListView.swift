@@ -99,14 +99,11 @@ struct PricingRuleRow: View {
 
             VStack(alignment: .trailing, spacing: 2) {
                 if rule.pricingType == .flatRate {
-                    Text(String(format: "$%.2f", rule.basePrice))
+                    Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", rule.basePrice))")
                         .font(.body)
                         .fontWeight(.medium)
                 } else {
-                    Text(String(format: "$%.2f + $%.2f/%@",
-                                 rule.basePrice,
-                                 rule.pricePerUnit,
-                                 rule.pricingType == .perKg ? "kg" : "km"))
+                    Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", rule.basePrice)) + \(AppSettings.shared.currencySymbol)\(String(format: "%.2f", rule.pricePerUnit))/\(rule.pricingType == .perKg ? "kg" : "km")")
                         .font(.body)
                         .fontWeight(.medium)
                 }
@@ -117,7 +114,7 @@ struct PricingRuleRow: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
+        .onTapGesture {
             onSelect()
         }
     }

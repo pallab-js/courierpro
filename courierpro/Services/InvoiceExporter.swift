@@ -32,8 +32,9 @@ struct InvoiceExporter {
         return data as Data
     }
 
-    private static func createInvoiceView(invoice: Invoice) -> NSView {
+      private static func createInvoiceView(invoice: Invoice) -> NSView {
         let containerView = NSView(frame: NSRect(x: 0, y: 0, width: 540, height: 720))
+        let currencySymbol = AppSettings.load().currencySymbol
 
         var yOffset: CGFloat = 680
 
@@ -46,12 +47,16 @@ struct InvoiceExporter {
         }
 
         func addLine(x1: CGFloat, y1: CGFloat, x2: CGFloat, y2: CGFloat, width: CGFloat = 1) {
-            let path = NSBezierPath()
-            path.move(to: NSPoint(x: x1, y: y1))
-            path.line(to: NSPoint(x: x2, y: y2))
-            path.lineWidth = width
-            NSColor.separatorColor.set()
-            path.stroke()
+            let lineView = LineView(
+                frame: NSRect(
+                    x: min(x1, x2),
+                    y: min(y1, y2),
+                    width: max(width, abs(x2 - x1)),
+                    height: max(width, abs(y2 - y1))
+                ),
+                width: width
+            )
+            containerView.addSubview(lineView)
         }
 
         addText("INVOICE", x: 36, y: yOffset, fontSize: 28, bold: true)
@@ -94,8 +99,8 @@ struct InvoiceExporter {
             for item in items {
                 addText(item.itemDescription, x: 36, y: yOffset, fontSize: 11)
                 addText("\(item.quantity)", x: 300, y: yOffset, fontSize: 11)
-                addText(String(format: "$%.2f", item.unitPrice), x: 370, y: yOffset, fontSize: 11)
-                addText(String(format: "$%.2f", item.totalPrice), x: 460, y: yOffset, fontSize: 11, bold: true)
+                addText(String(format: "\(currencySymbol)%.2f", item.unitPrice), x: 370, y: yOffset, fontSize: 11)
+                addText(String(format: "\(currencySymbol)%.2f", item.totalPrice), x: 460, y: yOffset, fontSize: 11, bold: true)
                 yOffset -= 20
             }
         }
@@ -105,29 +110,29 @@ struct InvoiceExporter {
         yOffset -= 25
 
         addText("Subtotal:", x: 350, y: yOffset, fontSize: 12, color: .gray)
-        addText(String(format: "$%.2f", invoice.subtotal), x: 460, y: yOffset, fontSize: 12)
+        addText(String(format: "\(currencySymbol)%.2f", invoice.subtotal), x: 460, y: yOffset, fontSize: 12)
         yOffset -= 20
 
         addText("Tax (\(String(format: "%.1f", invoice.taxRate))%):", x: 350, y: yOffset, fontSize: 12, color: .gray)
-        addText(String(format: "$%.2f", invoice.taxAmount), x: 460, y: yOffset, fontSize: 12)
+        addText(String(format: "\(currencySymbol)%.2f", invoice.taxAmount), x: 460, y: yOffset, fontSize: 12)
         yOffset -= 25
 
         addLine(x1: 350, y1: yOffset, x2: 540, y2: yOffset, width: 2)
         yOffset -= 25
 
         addText("TOTAL:", x: 350, y: yOffset, fontSize: 16, bold: true)
-        addText(String(format: "$%.2f", invoice.totalAmount), x: 440, y: yOffset, fontSize: 16, bold: true)
+        addText(String(format: "\(currencySymbol)%.2f", invoice.totalAmount), x: 440, y: yOffset, fontSize: 16, bold: true)
         yOffset -= 30
 
         if invoice.totalPaid > 0 {
             addText("Paid:", x: 350, y: yOffset, fontSize: 12, color: .systemGreen)
-            addText(String(format: "$%.2f", invoice.totalPaid), x: 460, y: yOffset, fontSize: 12, color: .systemGreen)
+            addText(String(format: "\(currencySymbol)%.2f", invoice.totalPaid), x: 460, y: yOffset, fontSize: 12, color: .systemGreen)
             yOffset -= 20
         }
 
         if invoice.balanceDue > 0 {
             addText("Balance Due:", x: 350, y: yOffset, fontSize: 12, bold: true, color: .systemOrange)
-            addText(String(format: "$%.2f", invoice.balanceDue), x: 460, y: yOffset, fontSize: 12, bold: true, color: .systemOrange)
+            addText(String(format: "\(currencySymbol)%.2f", invoice.balanceDue), x: 460, y: yOffset, fontSize: 12, bold: true, color: .systemOrange)
             yOffset -= 30
         }
 
@@ -154,13 +159,53 @@ struct ExportButton: View {
     private func exportInvoice() {
         guard let data = InvoiceExporter.exportToPDF(invoice: invoice) else { return }
 
+        let sanitizedNumber = invoice.invoiceNumber
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: "..", with: "")
+            .replacingOccurrences(of: "\0", with: "")
+
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.pdf]
-        savePanel.nameFieldStringValue = "\(invoice.invoiceNumber).pdf"
+        savePanel.nameFieldStringValue = "\(sanitizedNumber).pdf"
         savePanel.begin { result in
             if result == .OK, let url = savePanel.url {
-                try? data.write(to: url)
+                do {
+                    try data.write(to: url)
+                } catch {
+                    // Silent failure handled by NSSavePanel
+                }
             }
         }
+    }
+}
+
+class LineView: NSView {
+    var lineWidth: CGFloat
+
+    init(frame frameRect: NSRect, width: CGFloat = 1) {
+        self.lineWidth = width
+        super.init(frame: frameRect)
+    }
+
+    required init?(coder: NSCoder) {
+        self.lineWidth = 1
+        super.init(coder: coder)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        let path = NSBezierPath()
+        if bounds.width >= bounds.height {
+            // Horizontal line
+            path.move(to: NSPoint(x: 0, y: bounds.height / 2))
+            path.line(to: NSPoint(x: bounds.width, y: bounds.height / 2))
+        } else {
+            // Vertical line
+            path.move(to: NSPoint(x: bounds.width / 2, y: 0))
+            path.line(to: NSPoint(x: bounds.width / 2, y: bounds.height))
+        }
+        path.lineWidth = lineWidth
+        NSColor.separatorColor.set()
+        path.stroke()
     }
 }

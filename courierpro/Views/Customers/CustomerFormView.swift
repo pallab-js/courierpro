@@ -30,13 +30,13 @@ struct CustomerFormView: View {
 
                     HStack {
                         Text("Email:")
-                        TextField("email@example.com", text: $email)
+                        TextField("info@company.in", text: $email)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     HStack {
                         Text("Phone:")
-                        TextField("555-0100", text: $phone)
+                        TextField("9876543210", text: $phone)
                             .textFieldStyle(.roundedBorder)
                     }
                 }
@@ -44,19 +44,19 @@ struct CustomerFormView: View {
                 Section("Address") {
                     HStack {
                         Text("Address:")
-                        TextField("Street address", text: $address)
+                        TextField("Street address, locality", text: $address)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     HStack {
                         Text("City:")
-                        TextField("City", text: $city)
+                        TextField("e.g., Mumbai, Delhi, Bangalore", text: $city)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     HStack {
                         Text("Postal Code:")
-                        TextField("12345", text: $postalCode)
+                        TextField("6-digit PIN code", text: $postalCode)
                             .textFieldStyle(.roundedBorder)
                     }
                 }
@@ -87,26 +87,52 @@ struct CustomerFormView: View {
     }
 
     private func addCustomer() {
-        guard !name.isEmpty else {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
             errorMessage = "Customer name is required"
             showingError = true
             return
         }
 
-        do {
-            try viewModel.createCustomer(
-                name: name,
-                email: email,
-                phone: phone,
-                address: address,
-                city: city,
-                postalCode: postalCode
-            )
-            dismiss()
-        } catch {
-            errorMessage = "Failed to add customer: \(error.localizedDescription)"
-            showingError = true
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedEmail.isEmpty {
+            let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+            let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
+            if !emailPredicate.evaluate(with: trimmedEmail) {
+                errorMessage = "Please enter a valid email address"
+                showingError = true
+                return
+            }
         }
+
+        let trimmedPhone = phone.trimmingCharacters(in: .whitespaces)
+        if !trimmedPhone.isEmpty {
+            let digitsOnly = trimmedPhone.filter { $0.isNumber }
+            if digitsOnly.count < 7 || digitsOnly.count > 15 {
+                errorMessage = "Phone number must be 7-15 digits"
+                showingError = true
+                return
+            }
+        }
+
+        let trimmedPostal = postalCode.trimmingCharacters(in: .whitespaces)
+        if !trimmedPostal.isEmpty {
+            if trimmedPostal.count < 3 || trimmedPostal.count > 10 || !trimmedPostal.allSatisfy(\.isNumber) {
+                errorMessage = "Postal code must be 3-10 digits"
+                showingError = true
+                return
+            }
+        }
+
+        viewModel.createCustomer(
+            name: trimmedName,
+            email: trimmedEmail,
+            phone: phone.trimmingCharacters(in: .whitespaces),
+            address: address.trimmingCharacters(in: .whitespacesAndNewlines),
+            city: city.trimmingCharacters(in: .whitespacesAndNewlines),
+            postalCode: trimmedPostal
+        )
+        dismiss()
     }
 }
 

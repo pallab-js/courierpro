@@ -90,7 +90,7 @@ struct RecurringInvoiceRow: View {
                     .padding(.vertical, 2)
                     .background(Color.blue.opacity(0.1))
                     .cornerRadius(4)
-                Text(String(format: "$%.2f", recurring.amount))
+                Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", recurring.amount))")
                     .font(.subheadline)
                     .fontWeight(.medium)
             }
@@ -112,7 +112,7 @@ struct RecurringInvoiceRow: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
+        .onTapGesture {
             onSelect()
         }
     }

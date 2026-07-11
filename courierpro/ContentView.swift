@@ -16,6 +16,7 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             SidebarView(selectedItem: $selectedItem)
+                .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
         } detail: {
             switch selectedItem {
             case .dashboard:
@@ -46,6 +47,15 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 800, minHeight: 600)
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToParcels)) { _ in
+            selectedItem = .parcels
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToCustomers)) { _ in
+            selectedItem = .customers
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToDrivers)) { _ in
+            selectedItem = .drivers
+        }
         .toolbar {
             ToolbarItemGroup(placement: .automatic) {
                 Menu {
@@ -96,8 +106,14 @@ struct ContentView: View {
     }
 
     private func handleImport(_ result: Result<URL, Error>) {
-        guard let url = try? result.get(),
-              let data = try? Data(contentsOf: url),
+        guard let url = try? result.get() else { return }
+
+        guard let fileSize = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+              fileSize <= 10_000_000 else {
+            return
+        }
+
+        guard let data = try? Data(contentsOf: url),
               let csv = String(data: data, encoding: .utf8) else { return }
 
         switch importType {

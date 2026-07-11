@@ -4,34 +4,34 @@ import XCTest
 final class CustomerTests: XCTestCase {
     func testCustomerInitialization() {
         let customer = Customer(
-            name: "Acme Corp",
-            email: "info@acme.com",
-            phone: "555-0101",
-            address: "123 Business St",
-            city: "San Francisco",
-            postalCode: "94102"
+            name: "Reliance Retail Ltd",
+            email: "orders@reliance.in",
+            phone: "9876543210",
+            address: "Maker Chambers IV, 222 Nariman Point",
+            city: "Mumbai",
+            postalCode: "400021"
         )
 
-        XCTAssertEqual(customer.name, "Acme Corp")
-        XCTAssertEqual(customer.email, "info@acme.com")
-        XCTAssertEqual(customer.phone, "555-0101")
-        XCTAssertEqual(customer.address, "123 Business St")
-        XCTAssertEqual(customer.city, "San Francisco")
-        XCTAssertEqual(customer.postalCode, "94102")
+        XCTAssertEqual(customer.name, "Reliance Retail Ltd")
+        XCTAssertEqual(customer.email, "orders@reliance.in")
+        XCTAssertEqual(customer.phone, "9876543210")
+        XCTAssertEqual(customer.address, "Maker Chambers IV, 222 Nariman Point")
+        XCTAssertEqual(customer.city, "Mumbai")
+        XCTAssertEqual(customer.postalCode, "400021")
     }
 
     func testCustomerFullName() {
-        let customer = Customer(name: "John Smith")
-        XCTAssertEqual(customer.fullName, "John Smith")
+        let customer = Customer(name: "Tata Consultancy Services")
+        XCTAssertEqual(customer.fullName, "Tata Consultancy Services")
     }
 
     func testCustomerShortAddress() {
         let customer = Customer(
             name: "Test",
-            city: "San Francisco",
-            postalCode: "94102"
+            city: "Bangalore",
+            postalCode: "560100"
         )
-        XCTAssertEqual(customer.shortAddress, "San Francisco 94102")
+        XCTAssertEqual(customer.shortAddress, "Bangalore 560100")
     }
 
     func testCustomerShortAddressEmpty() {

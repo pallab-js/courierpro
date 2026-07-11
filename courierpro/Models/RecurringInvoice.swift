@@ -68,8 +68,8 @@ final class RecurringInvoice {
         self.id = id
         self.name = name
         self.frequencyRaw = frequency.rawValue
-        self.amount = amount
-        self.taxRate = taxRate
+        self.amount = amount.isFinite ? max(0, amount) : 0
+        self.taxRate = max(0, min(taxRate, 100))
         self.notes = notes
         self.isActive = isActive
         self.nextDueDate = nextDueDate
@@ -78,8 +78,10 @@ final class RecurringInvoice {
         self.updatedAt = updatedAt
     }
 
-    func generateNextInvoice() -> Invoice {
-        let taxAmount = amount * taxRate / 100
+    func generateNextInvoice() -> Invoice? {
+        guard let customer = customer else { return nil }
+        guard amount > 0 else { return nil }
+
         let invoice = Invoice(
             status: .pending,
             subtotal: amount,
@@ -88,6 +90,13 @@ final class RecurringInvoice {
             dueDate: nextDueDate,
             customer: customer
         )
+        let item = InvoiceItem(
+            itemDescription: name.isEmpty ? "Recurring Service Fee" : name,
+            quantity: 1,
+            unitPrice: amount,
+            invoice: invoice
+        )
+        invoice.items = [item]
         invoice.recalculateTotals()
         return invoice
     }

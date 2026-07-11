@@ -43,7 +43,7 @@ final class PersistenceService {
             modelContainer = try ModelContainer(for: schema, configurations: [config])
             modelContext = modelContainer.mainContext
         } catch {
-            fatalError("Failed to initialize ModelContainer: \(error)")
+            fatalError("Failed to initialize database. The app cannot function without its database.")
         }
     }
 

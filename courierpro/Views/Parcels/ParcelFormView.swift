@@ -107,20 +107,29 @@ struct ParcelFormView: View {
             return
         }
 
-        let weightValue = Double(weight) ?? 0
-
-        do {
-            try viewModel.createParcel(
-                sender: sender,
-                receiver: receiver,
-                weight: weightValue,
-                dimensions: dimensions,
-                notes: notes.isEmpty ? nil : notes
-            )
-            dismiss()
-        } catch {
-            errorMessage = "Failed to create parcel: \(error.localizedDescription)"
+        guard !weight.isEmpty,
+              let weightValue = Double(weight),
+              weightValue.isFinite,
+              weightValue >= 0,
+              weightValue <= 10_000 else {
+            errorMessage = "Please enter a valid weight (0-10000 kg)"
             showingError = true
+            return
+        }
+
+        viewModel.createParcel(
+            sender: sender,
+            receiver: receiver,
+            weight: weightValue,
+            dimensions: dimensions,
+            notes: notes.isEmpty ? nil : notes
+        )
+
+        if viewModel.showError {
+            errorMessage = viewModel.errorMessage ?? "Failed to create parcel"
+            showingError = true
+        } else {
+            dismiss()
         }
     }
 }

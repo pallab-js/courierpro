@@ -4,6 +4,7 @@ struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @State private var showingResetConfirmation = false
     @State private var savedSuccessfully = false
+    @State private var taxRateString = ""
 
     var body: some View {
         ScrollView {
@@ -19,17 +20,20 @@ struct SettingsView: View {
 
                 HStack {
                     Spacer()
-                    Button("Reset to Defaults") {
+                    Button("Reset to Defaults", role: .destructive) {
                         showingResetConfirmation = true
                     }
-                    .foregroundColor(.red)
 
                     Button("Save Changes") {
+                        if let rate = Double(taxRateString), rate.isFinite, rate >= 0, rate <= 100 {
+                            viewModel.settings.taxRate = rate
+                        }
+                        viewModel.settings.trackingPrefix = viewModel.settings.trackingPrefix
+                            .filter { $0.isLetter || $0.isNumber }
+                            .prefix(10)
+                            .description
                         viewModel.save()
                         savedSuccessfully = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            savedSuccessfully = false
-                        }
                     }
                     .buttonStyle(.borderedProminent)
 
@@ -42,10 +46,20 @@ struct SettingsView: View {
             }
             .padding()
         }
+        .onAppear {
+            taxRateString = String(format: "%.1f", viewModel.settings.taxRate)
+        }
+        .task(id: savedSuccessfully) {
+            if savedSuccessfully {
+                try? await Task.sleep(for: .seconds(2))
+                savedSuccessfully = false
+            }
+        }
         .alert("Reset Settings", isPresented: $showingResetConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Reset", role: .destructive) {
                 viewModel.resetToDefaults()
+                taxRateString = String(format: "%.1f", viewModel.settings.taxRate)
             }
         } message: {
             Text("Are you sure you want to reset all settings to defaults? This cannot be undone.")
@@ -62,25 +76,25 @@ struct SettingsView: View {
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
                     LabeledContent("Business Name") {
-                        TextField("Enter business name", text: $viewModel.settings.businessName)
+                        TextField("e.g., Quick Deliver India Pvt Ltd", text: $viewModel.settings.businessName)
                             .textFieldStyle(.roundedBorder)
                             .frame(maxWidth: 300)
                     }
 
                     LabeledContent("Address") {
-                        TextField("Enter business address", text: $viewModel.settings.businessAddress)
+                        TextField("e.g., Andheri East, Mumbai 400069", text: $viewModel.settings.businessAddress)
                             .textFieldStyle(.roundedBorder)
                             .frame(maxWidth: 400)
                     }
 
                     LabeledContent("Phone") {
-                        TextField("Enter business phone", text: $viewModel.settings.businessPhone)
+                        TextField("9876543210", text: $viewModel.settings.businessPhone)
                             .textFieldStyle(.roundedBorder)
                             .frame(maxWidth: 200)
                     }
 
                     LabeledContent("Email") {
-                        TextField("Enter business email", text: $viewModel.settings.businessEmail)
+                        TextField("info@yourcompany.in", text: $viewModel.settings.businessEmail)
                             .textFieldStyle(.roundedBorder)
                             .frame(maxWidth: 300)
                     }
@@ -133,7 +147,7 @@ struct SettingsView: View {
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
                     LabeledContent("Default Tax Rate (%)") {
-                        TextField("0.0", value: $viewModel.settings.taxRate, format: .number)
+                        TextField("0.0", text: $taxRateString)
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 100)
                     }
