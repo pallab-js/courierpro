@@ -54,12 +54,15 @@ struct ParcelDetailView: View {
         .alert("Delete Parcel", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                try? viewModel.deleteParcel(parcel)
-                dismiss()
+                viewModel.deleteParcel(parcel)
+                if viewModel.errorMessage == nil {
+                    dismiss()
+                }
             }
         } message: {
             Text("Are you sure you want to delete parcel \(parcel.trackingNumber)? This action cannot be undone.")
         }
+        .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
     }
 
     private var headerSection: some View {

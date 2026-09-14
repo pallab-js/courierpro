@@ -48,8 +48,10 @@ struct InvoiceDetailView: View {
         .alert("Delete Invoice", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                try? viewModel.deleteInvoice(invoice)
-                dismiss()
+                viewModel.deleteInvoice(invoice)
+                if viewModel.errorMessage == nil {
+                    dismiss()
+                }
             }
         } message: {
             Text("Are you sure you want to delete invoice \(invoice.invoiceNumber)? This action cannot be undone.")
@@ -213,6 +215,7 @@ struct InvoiceStatusBadge: View {
         .background(backgroundColor.opacity(0.2))
         .foregroundColor(backgroundColor)
         .cornerRadius(8)
+        .accessibilityLabel("Invoice status: \(status.displayName)")
     }
 
     private var backgroundColor: Color {

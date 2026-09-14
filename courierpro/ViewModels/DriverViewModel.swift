@@ -6,11 +6,16 @@ import Combine
 final class DriverViewModel: ObservableObject {
     private let persistenceService: PersistenceService
 
-    @Published var drivers: [Driver] = []
+    @Published var drivers: [Driver] = [] {
+        didSet { updateCachedDriverCounts() }
+    }
     @Published var searchText: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showError = false
+
+    private(set) var availableDrivers: [Driver] = []
+    private(set) var busyDrivers: [Driver] = []
 
     init(persistenceService: PersistenceService? = nil) {
         self.persistenceService = persistenceService ?? PersistenceService.shared
@@ -26,12 +31,9 @@ final class DriverViewModel: ObservableObject {
         }
     }
 
-    var availableDrivers: [Driver] {
-        drivers.filter { $0.isAvailable }
-    }
-
-    var busyDrivers: [Driver] {
-        drivers.filter { !$0.isAvailable }
+    private func updateCachedDriverCounts() {
+        availableDrivers = drivers.filter { $0.isAvailable }
+        busyDrivers = drivers.filter { !$0.isAvailable }
     }
 
     func loadDrivers() {

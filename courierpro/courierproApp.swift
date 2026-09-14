@@ -10,16 +10,42 @@ import SwiftData
 
 @main
 struct courierproApp: App {
-    let persistenceService = PersistenceService.shared
+    @State private var databaseError: Bool
+
+    init() {
+        if let service = PersistenceService.shared {
+            _databaseError = State(initialValue: false)
+        } else {
+            _databaseError = State(initialValue: true)
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .task {
-                    try? DataSeeder.shared.seedSampleData(into: persistenceService.modelContext)
+            if databaseError {
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 48))
+                        .foregroundColor(.red)
+                    Text("Database Error")
+                        .font(.title)
+                        .fontWeight(.bold)
+                    Text("Failed to initialize the database. The app cannot function without it. Please restart or reinstall the app.")
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: 400)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ContentView()
+                    .task {
+                        if let context = PersistenceService.shared?.modelContext {
+                            try? DataSeeder.shared.seedSampleData(into: context)
+                        }
+                    }
+                    .modelContainer(PersistenceService.shared!.modelContainer)
+            }
         }
-        .modelContainer(persistenceService.modelContainer)
         .commands {
             CommandGroup(after: .newItem) {
                 Button("New Parcel") {

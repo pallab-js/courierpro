@@ -4,6 +4,7 @@ struct CustomerListView: View {
     @StateObject private var viewModel = CustomerViewModel()
     @State private var showingCreateSheet = false
     @State private var selectedCustomer: Customer?
+    @State private var deleteConfirmation: Customer?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -75,7 +76,7 @@ struct CustomerListView: View {
                         }
                         Divider()
                         Button("Delete", role: .destructive) {
-                            viewModel.deleteCustomer(customer)
+                            deleteConfirmation = customer
                         }
                     }
                 }
@@ -91,6 +92,22 @@ struct CustomerListView: View {
             CustomerEditView(customer: customer, viewModel: viewModel)
         }
         .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
+        .alert("Delete Customer", isPresented: Binding(
+            get: { deleteConfirmation != nil },
+            set: { if !$0 { deleteConfirmation = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { deleteConfirmation = nil }
+            Button("Delete", role: .destructive) {
+                if let customer = deleteConfirmation {
+                    viewModel.deleteCustomer(customer)
+                    deleteConfirmation = nil
+                }
+            }
+        } message: {
+            if let customer = deleteConfirmation {
+                Text("Are you sure you want to delete customer \(customer.name)? This action cannot be undone.")
+            }
+        }
     }
 }
 

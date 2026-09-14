@@ -4,6 +4,7 @@ struct InvoiceListView: View {
     @StateObject private var viewModel = InvoiceViewModel()
     @State private var showingCreateSheet = false
     @State private var viewingInvoice: Invoice?
+    @State private var deleteConfirmation: Invoice?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -35,7 +36,9 @@ struct InvoiceListView: View {
 
             Divider()
 
-            if viewModel.filteredInvoices.isEmpty {
+            if viewModel.isLoadingInvoices {
+                LoadingView()
+            } else if viewModel.filteredInvoices.isEmpty {
                 VStack {
                     Image(systemName: "doc.text")
                         .font(.system(size: 48))
@@ -70,7 +73,7 @@ struct InvoiceListView: View {
                             }
                             Divider()
                             Button("Delete", role: .destructive) {
-                                try? viewModel.deleteInvoice(invoice)
+                                deleteConfirmation = invoice
                             }
                         }
                     }
@@ -85,6 +88,22 @@ struct InvoiceListView: View {
         }
         .sheet(item: $viewingInvoice) { invoice in
             InvoiceDetailView(invoice: invoice)
+        }
+        .alert("Delete Invoice", isPresented: Binding(
+            get: { deleteConfirmation != nil },
+            set: { if !$0 { deleteConfirmation = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { deleteConfirmation = nil }
+            Button("Delete", role: .destructive) {
+                if let invoice = deleteConfirmation {
+                    try? viewModel.deleteInvoice(invoice)
+                    deleteConfirmation = nil
+                }
+            }
+        } message: {
+            if let invoice = deleteConfirmation {
+                Text("Are you sure you want to delete invoice \(invoice.invoiceNumber)? This action cannot be undone.")
+            }
         }
     }
 }

@@ -36,12 +36,15 @@ struct DriverDetailView: View {
         .alert("Delete Driver", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                try? viewModel.deleteDriver(driver)
-                dismiss()
+                viewModel.deleteDriver(driver)
+                if viewModel.errorMessage == nil {
+                    dismiss()
+                }
             }
         } message: {
             Text("Are you sure you want to delete driver \(driver.name)? This action cannot be undone.")
         }
+        .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
     }
 
     private var headerSection: some View {

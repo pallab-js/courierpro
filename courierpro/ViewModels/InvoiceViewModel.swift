@@ -6,7 +6,9 @@ import Combine
 final class InvoiceViewModel: ObservableObject {
     private let persistenceService: PersistenceService
 
-    @Published var invoices: [Invoice] = []
+    @Published var invoices: [Invoice] = [] {
+        didSet { updateCachedFinancials() }
+    }
     @Published var pricingRules: [PricingRule] = []
     @Published var searchText: String = ""
     @Published var selectedStatus: InvoiceStatus?
@@ -14,6 +16,10 @@ final class InvoiceViewModel: ObservableObject {
     @Published var isLoadingPricingRules = false
     @Published var errorMessage: String?
     @Published var showError = false
+
+    private(set) var totalRevenue: Double = 0
+    private(set) var pendingAmount: Double = 0
+    private(set) var overdueAmount: Double = 0
 
     var isLoading: Bool {
         isLoadingInvoices || isLoadingPricingRules
@@ -40,16 +46,10 @@ final class InvoiceViewModel: ObservableObject {
         return results
     }
 
-    var totalRevenue: Double {
-        invoices.filter { $0.status == .paid }.reduce(0) { $0 + $1.totalAmount }
-    }
-
-    var pendingAmount: Double {
-        invoices.filter { $0.status == .pending }.reduce(0) { $0 + $1.balanceDue }
-    }
-
-    var overdueAmount: Double {
-        invoices.filter { $0.status == .overdue }.reduce(0) { $0 + $1.balanceDue }
+    private func updateCachedFinancials() {
+        totalRevenue = invoices.filter { $0.status == .paid }.reduce(0) { $0 + $1.totalAmount }
+        pendingAmount = invoices.filter { $0.status == .pending }.reduce(0) { $0 + $1.balanceDue }
+        overdueAmount = invoices.filter { $0.status == .overdue }.reduce(0) { $0 + $1.balanceDue }
     }
 
     func loadInvoices() {

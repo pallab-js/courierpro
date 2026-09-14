@@ -6,12 +6,17 @@ import Combine
 final class ParcelViewModel: ObservableObject {
     let persistenceService: PersistenceService
 
-    @Published var parcels: [Parcel] = []
+    @Published var parcels: [Parcel] = [] {
+        didSet { updateCachedCounts() }
+    }
     @Published var searchText: String = ""
     @Published var selectedStatus: DeliveryStatus?
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showError = false
+
+    private(set) var inTransitCount: Int = 0
+    private(set) var deliveredCount: Int = 0
 
     init(persistenceService: PersistenceService? = nil) {
         self.persistenceService = persistenceService ?? PersistenceService.shared
@@ -39,12 +44,9 @@ final class ParcelViewModel: ObservableObject {
         Dictionary(grouping: parcels, by: \.status).mapValues { $0.count }
     }
 
-    var inTransitCount: Int {
-        parcels.filter { $0.status == .inTransit }.count
-    }
-
-    var deliveredCount: Int {
-        parcels.filter { $0.status == .delivered }.count
+    private func updateCachedCounts() {
+        inTransitCount = parcels.filter { $0.status == .inTransit }.count
+        deliveredCount = parcels.filter { $0.status == .delivered }.count
     }
 
     func loadParcels() {

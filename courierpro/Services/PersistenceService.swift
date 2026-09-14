@@ -12,7 +12,7 @@ final class PersistenceService {
     let modelContainer: ModelContainer
     let modelContext: ModelContext
 
-    private init(isInMemory: Bool = false) {
+    private init?(isInMemory: Bool = false) {
         let schema = Schema([
             Parcel.self,
             Customer.self,
@@ -39,12 +39,11 @@ final class PersistenceService {
             )
         }
 
-        do {
-            modelContainer = try ModelContainer(for: schema, configurations: [config])
-            modelContext = modelContainer.mainContext
-        } catch {
-            fatalError("Failed to initialize database. The app cannot function without its database.")
+        guard let container = try? ModelContainer(for: schema, configurations: [config]) else {
+            return nil
         }
+        modelContainer = container
+        modelContext = container.mainContext
     }
 
     func save() throws {

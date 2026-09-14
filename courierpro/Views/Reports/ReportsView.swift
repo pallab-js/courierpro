@@ -11,6 +11,7 @@ struct ReportsView: View {
     @State private var startDate = Date()
     @State private var endDate = Date()
     @State private var exportedURL: URL?
+    @State private var isLoading = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -55,21 +56,25 @@ struct ReportsView: View {
                 Divider()
             }
 
-            switch selectedReport {
-            case .overview:
-                OverviewReportView(
-                    parcelViewModel: parcelViewModel,
-                    customerViewModel: customerViewModel,
-                    driverViewModel: driverViewModel,
-                    invoiceViewModel: invoiceViewModel,
-                    dateRange: dateRange
-                )
-            case .revenue:
-                RevenueReportView(invoiceViewModel: invoiceViewModel, dateRange: dateRange)
-            case .deliveries:
-                DeliveryReportView(parcelViewModel: parcelViewModel, dateRange: dateRange)
-            case .drivers:
-                DriverReportView(driverViewModel: driverViewModel, parcelViewModel: parcelViewModel, dateRange: dateRange)
+            if isLoading {
+                LoadingView()
+            } else {
+                switch selectedReport {
+                case .overview:
+                    OverviewReportView(
+                        parcelViewModel: parcelViewModel,
+                        customerViewModel: customerViewModel,
+                        driverViewModel: driverViewModel,
+                        invoiceViewModel: invoiceViewModel,
+                        dateRange: dateRange
+                    )
+                case .revenue:
+                    RevenueReportView(invoiceViewModel: invoiceViewModel, dateRange: dateRange)
+                case .deliveries:
+                    DeliveryReportView(parcelViewModel: parcelViewModel, dateRange: dateRange)
+                case .drivers:
+                    DriverReportView(driverViewModel: driverViewModel, parcelViewModel: parcelViewModel, dateRange: dateRange)
+                }
             }
         }
         .task {
@@ -77,6 +82,7 @@ struct ReportsView: View {
             customerViewModel.loadCustomers()
             driverViewModel.loadDrivers()
             invoiceViewModel.loadInvoices()
+            isLoading = false
         }
         .sheet(isPresented: $showingDatePicker) {
             DateRangePicker(startDate: $startDate, endDate: $endDate) { range in
@@ -446,6 +452,8 @@ struct ReportCard: View {
         .padding()
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(10)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 
@@ -468,6 +476,8 @@ struct StatusCountCard: View {
         .padding()
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(10)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(status.displayName): \(count)")
     }
 }
 

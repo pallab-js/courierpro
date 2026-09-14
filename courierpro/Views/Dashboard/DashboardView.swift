@@ -101,6 +101,7 @@ struct DashboardView: View {
             .contentShape(RoundedRectangle(cornerRadius: 10))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
     }
 
     // MARK: - KPI Section
@@ -444,6 +445,8 @@ struct KPICard: View {
                 .fill(gradient)
                 .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 

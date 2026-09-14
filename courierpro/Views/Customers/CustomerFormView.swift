@@ -106,13 +106,10 @@ struct CustomerFormView: View {
         }
 
         let trimmedPhone = phone.trimmingCharacters(in: .whitespaces)
-        if !trimmedPhone.isEmpty {
-            let digitsOnly = trimmedPhone.filter { $0.isNumber }
-            if digitsOnly.count < 7 || digitsOnly.count > 15 {
-                errorMessage = "Phone number must be 7-15 digits"
-                showingError = true
-                return
-            }
+        if !trimmedPhone.isEmpty && !CSVUtilities.validatePhoneNumber(trimmedPhone) {
+            errorMessage = "Phone number must be 7-15 digits"
+            showingError = true
+            return
         }
 
         let trimmedPostal = postalCode.trimmingCharacters(in: .whitespaces)

@@ -12,6 +12,7 @@ struct EmptyStateView: View {
             Image(systemName: icon)
                 .font(.system(size: 56))
                 .foregroundColor(.secondary.opacity(0.6))
+                .accessibilityHidden(true)
 
             VStack(spacing: 8) {
                 Text(title)
@@ -32,6 +33,7 @@ struct EmptyStateView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
+                .accessibilityLabel(actionTitle)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

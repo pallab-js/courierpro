@@ -4,6 +4,7 @@ struct DriverListView: View {
     @StateObject private var viewModel = DriverViewModel()
     @State private var showingCreateSheet = false
     @State private var viewingDriver: Driver?
+    @State private var deleteConfirmation: Driver?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -59,7 +60,7 @@ struct DriverListView: View {
                             }
                             Divider()
                             Button("Delete", role: .destructive) {
-                                viewModel.deleteDriver(driver)
+                                deleteConfirmation = driver
                             }
                         }
                     }
@@ -76,6 +77,22 @@ struct DriverListView: View {
             DriverDetailView(driver: driver)
         }
         .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
+        .alert("Delete Driver", isPresented: Binding(
+            get: { deleteConfirmation != nil },
+            set: { if !$0 { deleteConfirmation = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { deleteConfirmation = nil }
+            Button("Delete", role: .destructive) {
+                if let driver = deleteConfirmation {
+                    viewModel.deleteDriver(driver)
+                    deleteConfirmation = nil
+                }
+            }
+        } message: {
+            if let driver = deleteConfirmation {
+                Text("Are you sure you want to delete driver \(driver.name)? This action cannot be undone.")
+            }
+        }
     }
 }
 
@@ -88,6 +105,7 @@ struct DriverRow: View {
             Circle()
                 .fill(!driver.isAvailable ? Color.red : (driver.isBusy ? Color.orange : Color.green))
                 .frame(width: 10, height: 10)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(driver.name)
@@ -117,6 +135,8 @@ struct DriverRow: View {
         .onTapGesture {
             onSelect()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(driver.name), License \(driver.licenseNumber), \(!driver.isAvailable ? "Unavailable" : (driver.isBusy ? "Busy" : "Available"))")
     }
 }
 

@@ -58,18 +58,7 @@ struct CSVExporter {
     }
 
     private static func escapeCSV(_ value: String) -> String {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        let formulaPrefixes: [Character] = ["=", "+", "-", "@", "\t", "\r"]
-        let escaped: String
-        if let first = trimmed.first, formulaPrefixes.contains(first) {
-            escaped = "'" + trimmed
-        } else {
-            escaped = trimmed
-        }
-        if escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n") {
-            return "\"\(escaped.replacingOccurrences(of: "\"", with: "\"\""))\""
-        }
-        return escaped
+        CSVUtilities.escapeCSV(value)
     }
 
     private static func formatDate(_ date: Date) -> String {

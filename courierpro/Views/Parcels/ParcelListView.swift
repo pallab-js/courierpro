@@ -5,6 +5,7 @@ struct ParcelListView: View {
     @State private var showingCreateSheet = false
     @State private var viewingParcel: Parcel?
     @State private var statusUpdateConfirmation: (parcel: Parcel, status: DeliveryStatus)?
+    @State private var deleteConfirmation: Parcel?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -69,7 +70,7 @@ struct ParcelListView: View {
                             }
                             Divider()
                             Button("Delete", role: .destructive) {
-                                viewModel.deleteParcel(parcel)
+                                deleteConfirmation = parcel
                             }
                         }
                     }
@@ -86,6 +87,22 @@ struct ParcelListView: View {
             ParcelDetailView(parcel: parcel)
         }
         .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
+        .alert("Delete Parcel", isPresented: Binding(
+            get: { deleteConfirmation != nil },
+            set: { if !$0 { deleteConfirmation = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { deleteConfirmation = nil }
+            Button("Delete", role: .destructive) {
+                if let parcel = deleteConfirmation {
+                    viewModel.deleteParcel(parcel)
+                    deleteConfirmation = nil
+                }
+            }
+        } message: {
+            if let parcel = deleteConfirmation {
+                Text("Are you sure you want to delete parcel \(parcel.trackingNumber)? This action cannot be undone.")
+            }
+        }
     }
 }
 
@@ -136,6 +153,7 @@ struct StatusBadge: View {
         .background(status.color.opacity(0.2))
         .foregroundColor(status.color)
         .cornerRadius(8)
+        .accessibilityLabel("Status: \(status.displayName)")
     }
 }
 

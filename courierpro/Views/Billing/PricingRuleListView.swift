@@ -4,6 +4,7 @@ struct PricingRuleListView: View {
     @StateObject private var viewModel = InvoiceViewModel()
     @State private var showingCreateSheet = false
     @State private var editingRule: PricingRule?
+    @State private var deleteConfirmation: PricingRule?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -20,7 +21,9 @@ struct PricingRuleListView: View {
 
             Divider()
 
-            if viewModel.pricingRules.isEmpty {
+            if viewModel.isLoadingPricingRules {
+                LoadingView()
+            } else if viewModel.pricingRules.isEmpty {
                 VStack {
                     Image(systemName: "dollarsign.circle")
                         .font(.system(size: 48))
@@ -57,7 +60,7 @@ struct PricingRuleListView: View {
                             }
                             Divider()
                             Button("Delete", role: .destructive) {
-                                try? viewModel.deletePricingRule(rule)
+                                deleteConfirmation = rule
                             }
                         }
                     }
@@ -72,6 +75,22 @@ struct PricingRuleListView: View {
         }
         .sheet(item: $editingRule) { rule in
             PricingRuleEditView(rule: rule, viewModel: viewModel)
+        }
+        .alert("Delete Pricing Rule", isPresented: Binding(
+            get: { deleteConfirmation != nil },
+            set: { if !$0 { deleteConfirmation = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { deleteConfirmation = nil }
+            Button("Delete", role: .destructive) {
+                if let rule = deleteConfirmation {
+                    try? viewModel.deletePricingRule(rule)
+                    deleteConfirmation = nil
+                }
+            }
+        } message: {
+            if let rule = deleteConfirmation {
+                Text("Are you sure you want to delete pricing rule \"\(rule.name)\"? This action cannot be undone.")
+            }
         }
     }
 }
