@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
+@MainActor
 struct InvoiceExporter {
     static func exportToPDF(invoice: Invoice) -> Data? {
         let view = createInvoiceView(invoice: invoice)
@@ -147,6 +148,7 @@ struct InvoiceExporter {
     }
 }
 
+@MainActor
 struct ExportButton: View {
     let invoice: Invoice
 
