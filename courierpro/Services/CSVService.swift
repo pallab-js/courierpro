@@ -133,6 +133,7 @@ struct CSVImporter {
                         if next == "\"" {
                             current.append("\"")
                         } else if next == "," {
+                            inQuotes = false
                             fields.append(current.trimmingCharacters(in: .whitespacesAndNewlines))
                             current = ""
                         } else {

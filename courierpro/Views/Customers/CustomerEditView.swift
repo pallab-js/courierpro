@@ -105,6 +105,17 @@ struct CustomerEditView: View {
             return
         }
 
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedEmail.isEmpty {
+            let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+            let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
+            if !emailPredicate.evaluate(with: trimmedEmail) {
+                errorMessage = "Please enter a valid email address"
+                showingError = true
+                return
+            }
+        }
+
         let trimmedPhone = phone.trimmingCharacters(in: .whitespaces)
         if !trimmedPhone.isEmpty && !CSVUtilities.validatePhoneNumber(trimmedPhone) {
             errorMessage = "Phone number must be 7-15 digits"
@@ -113,10 +124,12 @@ struct CustomerEditView: View {
         }
 
         let trimmedPostal = postalCode.trimmingCharacters(in: .whitespaces)
-        if !trimmedPostal.isEmpty && trimmedPostal.count != 6 {
-            errorMessage = "PIN code must be 6 digits"
-            showingError = true
-            return
+        if !trimmedPostal.isEmpty {
+            if trimmedPostal.count < 3 || trimmedPostal.count > 10 || !trimmedPostal.allSatisfy(\.isNumber) {
+                errorMessage = "Postal code must be 3-10 digits"
+                showingError = true
+                return
+            }
         }
 
         viewModel.updateCustomer(

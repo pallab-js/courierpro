@@ -121,15 +121,18 @@ struct ParcelEditView: View {
 
     private func loadCustomers() async {
         let customerViewModel = CustomerViewModel()
-        try? customerViewModel.loadCustomers()
+        customerViewModel.loadCustomers()
         availableSenders = customerViewModel.customers
         availableReceivers = customerViewModel.customers
     }
 
     private func loadDrivers() async {
         let descriptor = FetchDescriptor<Driver>()
-        if let drivers = try? PersistenceService.shared.fetch(descriptor) {
-            availableDrivers = drivers
+        do {
+            availableDrivers = try PersistenceService.shared!.fetch(descriptor)
+        } catch {
+            errorMessage = "Failed to load drivers"
+            showingError = true
         }
     }
 
@@ -160,8 +163,8 @@ struct ParcelEditView: View {
         parcel.updatedAt = Date()
 
         do {
-            try PersistenceService.shared.save()
-            try viewModel.loadParcels()
+            try PersistenceService.shared!.save()
+            viewModel.loadParcels()
             dismiss()
         } catch {
             errorMessage = "Failed to save changes"

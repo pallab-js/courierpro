@@ -7,6 +7,8 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showingImportSheet = false
     @State private var importType: ImportType = .customers
+    @State private var showingError = false
+    @State private var errorMessage = ""
 
     enum ImportType {
         case customers
@@ -82,27 +84,47 @@ struct ContentView: View {
         ) { result in
             handleImport(result)
         }
+        .alert("Error", isPresented: $showingError) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
     }
 
     private func exportParcels() {
-        let descriptor = FetchDescriptor<Parcel>()
-        guard let parcels = try? modelContext.fetch(descriptor) else { return }
-        let csv = CSVExporter.exportParcels(parcels)
-        saveToDownloads(csv, filename: "parcels_export.csv")
+        do {
+            let descriptor = FetchDescriptor<Parcel>()
+            let parcels = try modelContext.fetch(descriptor)
+            let csv = CSVExporter.exportParcels(parcels)
+            saveToDownloads(csv, filename: "parcels_export.csv")
+        } catch {
+            errorMessage = "Failed to export parcels: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 
     private func exportCustomers() {
-        let descriptor = FetchDescriptor<Customer>()
-        guard let customers = try? modelContext.fetch(descriptor) else { return }
-        let csv = CSVExporter.exportCustomers(customers)
-        saveToDownloads(csv, filename: "customers_export.csv")
+        do {
+            let descriptor = FetchDescriptor<Customer>()
+            let customers = try modelContext.fetch(descriptor)
+            let csv = CSVExporter.exportCustomers(customers)
+            saveToDownloads(csv, filename: "customers_export.csv")
+        } catch {
+            errorMessage = "Failed to export customers: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 
     private func exportDrivers() {
-        let descriptor = FetchDescriptor<Driver>()
-        guard let drivers = try? modelContext.fetch(descriptor) else { return }
-        let csv = CSVExporter.exportDrivers(drivers)
-        saveToDownloads(csv, filename: "drivers_export.csv")
+        do {
+            let descriptor = FetchDescriptor<Driver>()
+            let drivers = try modelContext.fetch(descriptor)
+            let csv = CSVExporter.exportDrivers(drivers)
+            saveToDownloads(csv, filename: "drivers_export.csv")
+        } catch {
+            errorMessage = "Failed to export drivers: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 
     private func handleImport(_ result: Result<URL, Error>) {
@@ -110,11 +132,17 @@ struct ContentView: View {
 
         guard let fileSize = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
               fileSize <= 10_000_000 else {
+            errorMessage = "File too large (max 10MB)"
+            showingError = true
             return
         }
 
         guard let data = try? Data(contentsOf: url),
-              let csv = String(data: data, encoding: .utf8) else { return }
+              let csv = String(data: data, encoding: .utf8) else {
+            errorMessage = "Failed to read file"
+            showingError = true
+            return
+        }
 
         switch importType {
         case .customers:
@@ -128,13 +156,27 @@ struct ContentView: View {
                 modelContext.insert(driver)
             }
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            errorMessage = "Failed to save imported data: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 
     private func saveToDownloads(_ content: String, filename: String) {
-        guard let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first else { return }
+        guard let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first else {
+            errorMessage = "Could not access Downloads directory"
+            showingError = true
+            return
+        }
         let url = downloads.appendingPathComponent(filename)
-        try? content.write(to: url, atomically: true, encoding: .utf8)
+        do {
+            try content.write(to: url, atomically: true, encoding: .utf8)
+        } catch {
+            errorMessage = "Failed to save file: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 }
 

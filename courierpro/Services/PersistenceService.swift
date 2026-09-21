@@ -6,7 +6,7 @@ final class PersistenceService {
     static let shared = PersistenceService()
 
     static var inMemory: PersistenceService {
-        PersistenceService(isInMemory: true)
+        PersistenceService(isInMemory: true)!
     }
 
     let modelContainer: ModelContainer

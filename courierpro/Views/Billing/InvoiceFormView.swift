@@ -116,14 +116,19 @@ struct InvoiceFormView: View {
 
     private func loadData() async {
         let customerViewModel = CustomerViewModel()
-        try? customerViewModel.loadCustomers()
+        customerViewModel.loadCustomers()
         availableCustomers = customerViewModel.customers
 
         let parcelViewModel = ParcelViewModel()
-        try? parcelViewModel.loadParcels()
+        parcelViewModel.loadParcels()
 
         let itemDescriptor = FetchDescriptor<InvoiceItem>()
-        let existingItems = (try? PersistenceService.shared.fetch(itemDescriptor)) ?? []
+        let existingItems: [InvoiceItem]
+        do {
+            existingItems = try PersistenceService.shared!.fetch(itemDescriptor)
+        } catch {
+            existingItems = []
+        }
         let invoicedParcelIds = Set(existingItems.compactMap { $0.parcel?.id })
 
         availableParcels = parcelViewModel.parcels.filter { $0.status == .delivered && !invoicedParcelIds.contains($0.id) }

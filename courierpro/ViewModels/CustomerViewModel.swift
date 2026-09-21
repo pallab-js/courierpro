@@ -13,7 +13,7 @@ final class CustomerViewModel: ObservableObject {
     @Published var showError = false
 
     init(persistenceService: PersistenceService? = nil) {
-        self.persistenceService = persistenceService ?? PersistenceService.shared
+        self.persistenceService = persistenceService ?? PersistenceService.shared!
     }
 
     var filteredCustomers: [Customer] {
@@ -57,8 +57,9 @@ final class CustomerViewModel: ObservableObject {
 
             let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             if !trimmedEmail.isEmpty {
-                let allCustomers = try? persistenceService.fetch(FetchDescriptor<Customer>())
-                if let matches = allCustomers?.filter({ $0.email.lowercased() == trimmedEmail }), !matches.isEmpty {
+                let allCustomers = try persistenceService.fetch(FetchDescriptor<Customer>())
+                let matches = allCustomers.filter { $0.email.lowercased() == trimmedEmail }
+                if !matches.isEmpty {
                     errorMessage = "A customer with this email already exists"
                     showError = true
                     return
@@ -94,8 +95,9 @@ final class CustomerViewModel: ObservableObject {
         do {
             let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             if !trimmedEmail.isEmpty {
-                let allCustomers = try? persistenceService.fetch(FetchDescriptor<Customer>())
-                if let matches = allCustomers?.filter({ $0.email.lowercased() == trimmedEmail && $0.id != customer.id }), !matches.isEmpty {
+                let allCustomers = try persistenceService.fetch(FetchDescriptor<Customer>())
+                let matches = allCustomers.filter { $0.email.lowercased() == trimmedEmail && $0.id != customer.id }
+                if !matches.isEmpty {
                     errorMessage = "A customer with this email already exists"
                     showError = true
                     return
@@ -119,11 +121,11 @@ final class CustomerViewModel: ObservableObject {
 
     func deleteCustomer(_ customer: Customer) {
         do {
-            let allParcels = try? persistenceService.fetch(FetchDescriptor<Parcel>())
-            let linkedParcels = allParcels?.filter { parcel in
+            let allParcels = try persistenceService.fetch(FetchDescriptor<Parcel>())
+            let linkedParcels = allParcels.filter { parcel in
                 parcel.sender?.id == customer.id || parcel.receiver?.id == customer.id
             }
-            if let parcels = linkedParcels, !parcels.isEmpty {
+            if !linkedParcels.isEmpty {
                 errorMessage = "Cannot delete customer with linked parcels"
                 showError = true
                 return

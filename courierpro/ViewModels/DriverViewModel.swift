@@ -18,7 +18,7 @@ final class DriverViewModel: ObservableObject {
     private(set) var busyDrivers: [Driver] = []
 
     init(persistenceService: PersistenceService? = nil) {
-        self.persistenceService = persistenceService ?? PersistenceService.shared
+        self.persistenceService = persistenceService ?? PersistenceService.shared!
     }
 
     var filteredDrivers: [Driver] {

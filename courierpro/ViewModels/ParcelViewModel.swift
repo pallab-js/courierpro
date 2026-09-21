@@ -19,7 +19,7 @@ final class ParcelViewModel: ObservableObject {
     private(set) var deliveredCount: Int = 0
 
     init(persistenceService: PersistenceService? = nil) {
-        self.persistenceService = persistenceService ?? PersistenceService.shared
+        self.persistenceService = persistenceService ?? PersistenceService.shared!
     }
 
     var filteredParcels: [Parcel] {
@@ -137,12 +137,11 @@ final class ParcelViewModel: ObservableObject {
 
     func deleteParcel(_ parcel: Parcel) {
         do {
-            let descriptor = FetchDescriptor<InvoiceItem>()
-            let allItems = try? persistenceService.fetch(descriptor)
-            let linkedItems = allItems?.filter { item in
+            let allItems = try persistenceService.fetch(FetchDescriptor<InvoiceItem>())
+            let linkedItems = allItems.filter { item in
                 item.parcel?.id == parcel.id
             }
-            if let items = linkedItems, !items.isEmpty {
+            if !linkedItems.isEmpty {
                 errorMessage = "Cannot delete parcel linked to an invoice"
                 showError = true
                 return

@@ -105,7 +105,7 @@ struct DriverAssignmentView: View {
 
     private func loadAvailableDrivers() {
         let descriptor = FetchDescriptor<Driver>()
-        if let drivers = try? PersistenceService.shared.fetch(descriptor) {
+        if let drivers = try? PersistenceService.shared?.fetch(descriptor) {
             availableDrivers = drivers.filter { $0.isAvailable }
         }
     }
@@ -121,7 +121,7 @@ struct DriverAssignmentView: View {
         parcel.updatedAt = Date()
 
         do {
-            try PersistenceService.shared.save()
+            try PersistenceService.shared?.save()
             dismiss()
         } catch {
             errorMessage = "Failed to assign driver: \(error.localizedDescription)"
@@ -134,7 +134,7 @@ struct DriverAssignmentView: View {
         parcel.updatedAt = Date()
 
         do {
-            try PersistenceService.shared.save()
+            try PersistenceService.shared?.save()
             dismiss()
         } catch {
             errorMessage = "Failed to unassign driver: \(error.localizedDescription)"
