@@ -6,17 +6,19 @@ final class InvoiceViewModelTests: XCTestCase {
     private var viewModel: InvoiceViewModel!
     private var testPersistenceService: PersistenceService!
 
-    @MainActor
     override func setUp() {
         super.setUp()
-        testPersistenceService = PersistenceService.inMemory
-        viewModel = InvoiceViewModel(persistenceService: testPersistenceService)
+        MainActor.assumeIsolated {
+            testPersistenceService = PersistenceService.inMemory
+            viewModel = InvoiceViewModel(persistenceService: testPersistenceService)
+        }
     }
 
-    @MainActor
     override func tearDown() {
-        viewModel = nil
-        testPersistenceService = nil
+        MainActor.assumeIsolated {
+            viewModel = nil
+            testPersistenceService = nil
+        }
         super.tearDown()
     }
 

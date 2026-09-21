@@ -6,17 +6,19 @@ final class ParcelViewModelTests: XCTestCase {
     private var viewModel: ParcelViewModel!
     private var testPersistenceService: PersistenceService!
 
-    @MainActor
     override func setUp() {
         super.setUp()
-        testPersistenceService = PersistenceService.inMemory
-        viewModel = ParcelViewModel(persistenceService: testPersistenceService)
+        MainActor.assumeIsolated {
+            testPersistenceService = PersistenceService.inMemory
+            viewModel = ParcelViewModel(persistenceService: testPersistenceService)
+        }
     }
 
-    @MainActor
     override func tearDown() {
-        viewModel = nil
-        testPersistenceService = nil
+        MainActor.assumeIsolated {
+            viewModel = nil
+            testPersistenceService = nil
+        }
         super.tearDown()
     }
 

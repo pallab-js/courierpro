@@ -6,15 +6,17 @@ import SwiftData
 final class PersistenceServiceTests: XCTestCase {
     private var persistenceService: PersistenceService!
 
-    @MainActor
     override func setUp() {
         super.setUp()
-        persistenceService = PersistenceService.inMemory
+        MainActor.assumeIsolated {
+            persistenceService = PersistenceService.inMemory
+        }
     }
 
-    @MainActor
     override func tearDown() {
-        persistenceService = nil
+        MainActor.assumeIsolated {
+            persistenceService = nil
+        }
         super.tearDown()
     }
 
