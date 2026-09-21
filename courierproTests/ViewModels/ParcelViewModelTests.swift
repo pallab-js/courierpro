@@ -3,8 +3,8 @@ import XCTest
 
 @MainActor
 final class ParcelViewModelTests: XCTestCase {
-    nonisolated(unsafe) private var viewModel: ParcelViewModel!
-    nonisolated(unsafe) private var testPersistenceService: PersistenceService!
+    private var viewModel: ParcelViewModel!
+    private var testPersistenceService: PersistenceService!
 
     override func setUp() {
         super.setUp()

@@ -5,7 +5,7 @@ import CoreLocation
 
 @MainActor
 final class BugFixesTests: XCTestCase {
-    nonisolated(unsafe) private var persistenceService: PersistenceService!
+    private var persistenceService: PersistenceService!
     private var context: ModelContext { persistenceService.modelContext }
 
     override func setUp() {

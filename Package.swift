@@ -22,7 +22,8 @@ let package = Package(
         .testTarget(
             name: "courierproTests",
             dependencies: ["courierpro"],
-            path: "courierproTests"
+            path: "courierproTests",
+            swiftSettings: [.swiftLanguageMode(.v5)]
         )
     ]
 )

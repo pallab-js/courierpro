@@ -4,7 +4,7 @@ import CoreLocation
 
 @MainActor
 final class RouteOptimizerTests: XCTestCase {
-    nonisolated(unsafe) private var persistenceService: PersistenceService!
+    private var persistenceService: PersistenceService!
 
     override func setUp() {
         super.setUp()

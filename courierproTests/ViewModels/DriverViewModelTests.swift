@@ -3,8 +3,8 @@ import XCTest
 
 @MainActor
 final class DriverViewModelTests: XCTestCase {
-    nonisolated(unsafe) private var viewModel: DriverViewModel!
-    nonisolated(unsafe) private var testPersistenceService: PersistenceService!
+    private var viewModel: DriverViewModel!
+    private var testPersistenceService: PersistenceService!
 
     override func setUp() {
         super.setUp()
