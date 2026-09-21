@@ -3,22 +3,18 @@ import XCTest
 
 @MainActor
 final class DriverViewModelTests: XCTestCase {
-    private var viewModel: DriverViewModel!
-    private var testPersistenceService: PersistenceService!
+    nonisolated(unsafe) private var viewModel: DriverViewModel!
+    nonisolated(unsafe) private var testPersistenceService: PersistenceService!
 
     override func setUp() {
         super.setUp()
-        MainActor.assumeIsolated {
-            testPersistenceService = PersistenceService.inMemory
-            viewModel = DriverViewModel(persistenceService: testPersistenceService)
-        }
+        testPersistenceService = PersistenceService.inMemory
+        viewModel = DriverViewModel(persistenceService: testPersistenceService)
     }
 
     override func tearDown() {
-        MainActor.assumeIsolated {
-            viewModel = nil
-            testPersistenceService = nil
-        }
+        viewModel = nil
+        testPersistenceService = nil
         super.tearDown()
     }
 

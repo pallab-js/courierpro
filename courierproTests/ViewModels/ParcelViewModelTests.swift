@@ -3,22 +3,18 @@ import XCTest
 
 @MainActor
 final class ParcelViewModelTests: XCTestCase {
-    private var viewModel: ParcelViewModel!
-    private var testPersistenceService: PersistenceService!
+    nonisolated(unsafe) private var viewModel: ParcelViewModel!
+    nonisolated(unsafe) private var testPersistenceService: PersistenceService!
 
     override func setUp() {
         super.setUp()
-        MainActor.assumeIsolated {
-            testPersistenceService = PersistenceService.inMemory
-            viewModel = ParcelViewModel(persistenceService: testPersistenceService)
-        }
+        testPersistenceService = PersistenceService.inMemory
+        viewModel = ParcelViewModel(persistenceService: testPersistenceService)
     }
 
     override func tearDown() {
-        MainActor.assumeIsolated {
-            viewModel = nil
-            testPersistenceService = nil
-        }
+        viewModel = nil
+        testPersistenceService = nil
         super.tearDown()
     }
 

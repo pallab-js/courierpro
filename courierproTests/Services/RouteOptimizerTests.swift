@@ -4,19 +4,15 @@ import CoreLocation
 
 @MainActor
 final class RouteOptimizerTests: XCTestCase {
-    private var persistenceService: PersistenceService!
+    nonisolated(unsafe) private var persistenceService: PersistenceService!
 
     override func setUp() {
         super.setUp()
-        MainActor.assumeIsolated {
-            persistenceService = PersistenceService.inMemory
-        }
+        persistenceService = PersistenceService.inMemory
     }
 
     override func tearDown() {
-        MainActor.assumeIsolated {
-            persistenceService = nil
-        }
+        persistenceService = nil
         super.tearDown()
     }
 
