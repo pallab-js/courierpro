@@ -6,12 +6,14 @@ final class DriverViewModelTests: XCTestCase {
     private var viewModel: DriverViewModel!
     private var testPersistenceService: PersistenceService!
 
+    @MainActor
     override func setUp() {
         super.setUp()
         testPersistenceService = PersistenceService.inMemory
         viewModel = DriverViewModel(persistenceService: testPersistenceService)
     }
 
+    @MainActor
     override func tearDown() {
         viewModel = nil
         testPersistenceService = nil

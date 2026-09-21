@@ -6,11 +6,13 @@ import CoreLocation
 final class RouteOptimizerTests: XCTestCase {
     private var persistenceService: PersistenceService!
 
+    @MainActor
     override func setUp() {
         super.setUp()
         persistenceService = PersistenceService.inMemory
     }
 
+    @MainActor
     override func tearDown() {
         persistenceService = nil
         super.tearDown()

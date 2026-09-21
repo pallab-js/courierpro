@@ -8,11 +8,13 @@ final class BugFixesTests: XCTestCase {
     private var persistenceService: PersistenceService!
     private var context: ModelContext { persistenceService.modelContext }
 
+    @MainActor
     override func setUp() {
         super.setUp()
         persistenceService = PersistenceService.inMemory
     }
 
+    @MainActor
     override func tearDown() {
         persistenceService = nil
         super.tearDown()

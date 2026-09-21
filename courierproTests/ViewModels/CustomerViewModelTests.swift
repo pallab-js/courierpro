@@ -6,12 +6,14 @@ final class CustomerViewModelTests: XCTestCase {
     private var viewModel: CustomerViewModel!
     private var testPersistenceService: PersistenceService!
 
+    @MainActor
     override func setUp() {
         super.setUp()
         testPersistenceService = PersistenceService.inMemory
         viewModel = CustomerViewModel(persistenceService: testPersistenceService)
     }
 
+    @MainActor
     override func tearDown() {
         viewModel = nil
         testPersistenceService = nil
