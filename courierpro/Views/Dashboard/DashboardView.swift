@@ -557,8 +557,14 @@ struct DashboardView: View {
 
     private var recentParcelsCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Recent Parcels")
-                .font(.headline)
+            HStack {
+                Text("Recent Parcels")
+                    .font(.headline)
+                Spacer()
+                Text("\(parcelViewModel.parcels.count) total")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
 
             if parcelViewModel.parcels.isEmpty {
                 EmptyStateView(
@@ -582,49 +588,37 @@ struct DashboardView: View {
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
-                    .frame(minWidth: 120, alignment: .leading)
+                    .frame(minWidth: 110, alignment: .leading)
 
                 Text("STATUS")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
-                    .frame(minWidth: 90, alignment: .center)
+                    .frame(minWidth: 80, alignment: .center)
 
-                Text("FROM")
+                Text("ROUTE")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
-                    .frame(minWidth: 100, alignment: .leading)
-
-                Text("TO")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
-                    .frame(minWidth: 100, alignment: .leading)
-
-                Text("DRIVER")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
-                    .frame(minWidth: 90, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 Text("DATE")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
-                    .frame(minWidth: 80, alignment: .trailing)
+                    .frame(minWidth: 70, alignment: .trailing)
 
                 Text("WEIGHT")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
-                    .frame(minWidth: 60, alignment: .trailing)
+                    .frame(minWidth: 55, alignment: .trailing)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(Color(NSColor.controlBackgroundColor))
 
-            ForEach(Array(parcelViewModel.parcels.prefix(6).enumerated()), id: \.element.id) { index, parcel in
+            ForEach(Array(parcelViewModel.parcels.prefix(8).enumerated()), id: \.element.id) { index, parcel in
                 parcelRow(parcel, isEven: index.isMultiple(of: 2))
             }
         }
@@ -640,7 +634,7 @@ struct DashboardView: View {
             Text(parcel.trackingNumber)
                 .font(.system(.caption, design: .monospaced))
                 .fontWeight(.medium)
-                .frame(minWidth: 120, alignment: .leading)
+                .frame(minWidth: 110, alignment: .leading)
 
             HStack(spacing: 3) {
                 Circle()
@@ -654,38 +648,26 @@ struct DashboardView: View {
             .background(parcel.status.color.opacity(0.1))
             .foregroundColor(parcel.status.color)
             .cornerRadius(4)
-            .frame(minWidth: 90, alignment: .center)
+            .frame(minWidth: 80, alignment: .center)
 
-            Text(parcel.senderName)
+            Text("\(parcel.senderName) → \(parcel.receiverName)")
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .frame(minWidth: 100, alignment: .leading)
-                .lineLimit(1)
-
-            Text(parcel.receiverName)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .frame(minWidth: 100, alignment: .leading)
-                .lineLimit(1)
-
-            Text(parcel.driverName)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .frame(minWidth: 90, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
 
             Text(parcel.createdAt, style: .date)
                 .font(.caption2)
                 .foregroundColor(.secondary)
-                .frame(minWidth: 80, alignment: .trailing)
+                .frame(minWidth: 70, alignment: .trailing)
 
             Text(String(format: "%.1f kg", parcel.weight))
                 .font(.caption2)
                 .foregroundColor(.secondary)
-                .frame(minWidth: 60, alignment: .trailing)
+                .frame(minWidth: 55, alignment: .trailing)
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 4)
+        .padding(.vertical, 5)
         .background(isEven ? Color(NSColor.controlBackgroundColor).opacity(0.4) : Color.clear)
     }
 
