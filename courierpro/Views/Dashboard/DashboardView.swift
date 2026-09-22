@@ -169,9 +169,9 @@ struct DashboardView: View {
         VStack(spacing: 16) {
             HStack(alignment: .top, spacing: 16) {
                 statusDistributionCard
-                    .frame(minWidth: 320)
+                    .frame(maxWidth: .infinity)
                 revenueHighlightsCard
-                    .frame(minWidth: 280)
+                    .frame(maxWidth: .infinity)
             }
             recentParcelsCard
         }
@@ -315,10 +315,7 @@ struct DashboardView: View {
                 )
                 .frame(height: 120)
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    recentParcelsTable
-                        .frame(minWidth: 700)
-                }
+                recentParcelsTable
             }
         }
         .padding(16)
@@ -328,17 +325,48 @@ struct DashboardView: View {
     private var recentParcelsTable: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                tableCell("TRACKING", width: 140, alignment: .leading)
-                tableCell("STATUS", width: 100, alignment: .center)
-                tableCell("FROM", width: 120, alignment: .leading)
-                tableCell("TO", width: 120, alignment: .leading)
-                tableCell("DRIVER", width: 110, alignment: .leading)
-                tableCell("DATE", width: 90, alignment: .trailing)
-                tableCell("WEIGHT", width: 70, alignment: .trailing)
+                Text("TRACKING")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 120, alignment: .leading)
+
+                Text("STATUS")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 90, alignment: .center)
+
+                Text("FROM")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 100, alignment: .leading)
+
+                Text("TO")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 100, alignment: .leading)
+
+                Text("DRIVER")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 90, alignment: .leading)
+
+                Text("DATE")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 80, alignment: .trailing)
+
+                Text("WEIGHT")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 60, alignment: .trailing)
             }
-            .font(.caption)
-            .fontWeight(.semibold)
-            .foregroundColor(.secondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(Color(NSColor.controlBackgroundColor))
@@ -354,17 +382,12 @@ struct DashboardView: View {
         )
     }
 
-    private func tableCell(_ text: String, width: CGFloat, alignment: Alignment) -> some View {
-        Text(text)
-            .frame(width: width, alignment: alignment)
-    }
-
     private func parcelRow(_ parcel: Parcel, isEven: Bool) -> some View {
         HStack(spacing: 0) {
             Text(parcel.trackingNumber)
                 .font(.system(.caption, design: .monospaced))
                 .fontWeight(.medium)
-                .frame(width: 140, alignment: .leading)
+                .frame(minWidth: 120, alignment: .leading)
 
             HStack(spacing: 3) {
                 Circle()
@@ -378,35 +401,35 @@ struct DashboardView: View {
             .background(parcel.status.color.opacity(0.1))
             .foregroundColor(parcel.status.color)
             .cornerRadius(4)
-            .frame(width: 100, alignment: .center)
+            .frame(minWidth: 90, alignment: .center)
 
             Text(parcel.senderName)
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .frame(width: 120, alignment: .leading)
+                .frame(minWidth: 100, alignment: .leading)
                 .lineLimit(1)
 
             Text(parcel.receiverName)
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .frame(width: 120, alignment: .leading)
+                .frame(minWidth: 100, alignment: .leading)
                 .lineLimit(1)
 
             Text(parcel.driverName)
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .frame(width: 110, alignment: .leading)
+                .frame(minWidth: 90, alignment: .leading)
                 .lineLimit(1)
 
             Text(parcel.createdAt, style: .date)
                 .font(.caption2)
                 .foregroundColor(.secondary)
-                .frame(width: 90, alignment: .trailing)
+                .frame(minWidth: 80, alignment: .trailing)
 
             Text(String(format: "%.1f kg", parcel.weight))
                 .font(.caption2)
                 .foregroundColor(.secondary)
-                .frame(width: 70, alignment: .trailing)
+                .frame(minWidth: 60, alignment: .trailing)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
