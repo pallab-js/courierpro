@@ -6,46 +6,20 @@ struct SettingsView: View {
     @State private var savedSuccessfully = false
     @State private var taxRateString = ""
 
+    private let fieldWidth: CGFloat = 280
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Settings")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
+                headerBar
                 businessInfoSection
                 currencySection
                 invoiceDefaultsSection
                 trackingSection
-
-                HStack {
-                    Spacer()
-                    Button("Reset to Defaults", role: .destructive) {
-                        showingResetConfirmation = true
-                    }
-
-                    Button("Save Changes") {
-                        if let rate = Double(taxRateString), rate.isFinite, rate >= 0, rate <= 100 {
-                            viewModel.settings.taxRate = rate
-                        }
-                        viewModel.settings.trackingPrefix = viewModel.settings.trackingPrefix
-                            .filter { $0.isLetter || $0.isNumber }
-                            .prefix(10)
-                            .description
-                        viewModel.save()
-                        savedSuccessfully = true
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    if savedSuccessfully {
-                        Text("Saved!")
-                            .foregroundColor(.green)
-                            .fontWeight(.medium)
-                    }
-                }
             }
-            .padding()
+            .padding(24)
         }
+        .background(Color(NSColor.controlBackgroundColor))
         .onAppear {
             taxRateString = String(format: "%.1f", viewModel.settings.taxRate)
         }
@@ -67,48 +41,73 @@ struct SettingsView: View {
         .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
     }
 
-    private var businessInfoSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Business Information")
-                .font(.title2)
-                .fontWeight(.bold)
+    // MARK: - Header
 
-            GroupBox {
-                VStack(alignment: .leading, spacing: 12) {
-                    LabeledContent("Business Name") {
-                        TextField("e.g., Quick Deliver India Pvt Ltd", text: $viewModel.settings.businessName)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 300)
-                    }
+    private var headerBar: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Settings")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                Text("Manage your business preferences")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
 
-                    LabeledContent("Address") {
-                        TextField("e.g., Andheri East, Mumbai 400069", text: $viewModel.settings.businessAddress)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 400)
-                    }
+            Spacer()
 
-                    LabeledContent("Phone") {
-                        TextField("9876543210", text: $viewModel.settings.businessPhone)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 200)
-                    }
-
-                    LabeledContent("Email") {
-                        TextField("info@yourcompany.in", text: $viewModel.settings.businessEmail)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 300)
-                    }
+            HStack(spacing: 12) {
+                Button("Reset to Defaults", role: .destructive) {
+                    showingResetConfirmation = true
                 }
-                .padding(8)
+
+                Button("Save Changes") {
+                    if let rate = Double(taxRateString), rate.isFinite, rate >= 0, rate <= 100 {
+                        viewModel.settings.taxRate = rate
+                    }
+                    viewModel.settings.trackingPrefix = viewModel.settings.trackingPrefix
+                        .filter { $0.isLetter || $0.isNumber }
+                        .prefix(10)
+                        .description
+                    viewModel.save()
+                    savedSuccessfully = true
+                }
+                .buttonStyle(.borderedProminent)
+
+                if savedSuccessfully {
+                    Text("Saved!")
+                        .foregroundColor(.green)
+                        .fontWeight(.medium)
+                }
             }
         }
     }
 
+    // MARK: - Business Info
+
+    private var businessInfoSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Business Information")
+                .font(.headline)
+
+            GroupBox {
+                VStack(alignment: .leading, spacing: 12) {
+                    formField(label: "Business Name", placeholder: "e.g., Quick Deliver India Pvt Ltd", text: $viewModel.settings.businessName, width: fieldWidth)
+                    formField(label: "Address", placeholder: "e.g., Andheri East, Mumbai 400069", text: $viewModel.settings.businessAddress, width: fieldWidth)
+                    formField(label: "Phone", placeholder: "9876543210", text: $viewModel.settings.businessPhone, width: fieldWidth)
+                    formField(label: "Email", placeholder: "info@yourcompany.in", text: $viewModel.settings.businessEmail, width: fieldWidth)
+                }
+                .padding(12)
+            }
+        }
+    }
+
+    // MARK: - Currency
+
     private var currencySection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Currency")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.headline)
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
@@ -119,7 +118,7 @@ struct SettingsView: View {
                                     .tag(currency.code)
                             }
                         }
-                        .frame(maxWidth: 300)
+                        .frame(maxWidth: fieldWidth)
                         .onChange(of: viewModel.settings.currencyCode) { _, newValue in
                             if let currency = SettingsViewModel.currencies.first(where: { $0.code == newValue }) {
                                 viewModel.settings.currencySymbol = currency.symbol
@@ -127,30 +126,23 @@ struct SettingsView: View {
                         }
                     }
 
-                    LabeledContent("Symbol") {
-                        TextField("Currency symbol", text: $viewModel.settings.currencySymbol)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
-                    }
+                    formField(label: "Symbol", placeholder: "$", text: $viewModel.settings.currencySymbol, width: 60)
                 }
-                .padding(8)
+                .padding(12)
             }
         }
     }
 
+    // MARK: - Invoice Defaults
+
     private var invoiceDefaultsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Invoice Defaults")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.headline)
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
-                    LabeledContent("Default Tax Rate (%)") {
-                        TextField("0.0", text: $taxRateString)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 100)
-                    }
+                    formField(label: "Default Tax Rate (%)", placeholder: "0.0", text: $taxRateString, width: 100)
 
                     LabeledContent("Default Notes") {
                         TextEditor(text: $viewModel.settings.defaultNotes)
@@ -161,31 +153,38 @@ struct SettingsView: View {
                             )
                     }
                 }
-                .padding(8)
+                .padding(12)
             }
         }
     }
 
+    // MARK: - Tracking
+
     private var trackingSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Tracking")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.headline)
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
-                    LabeledContent("Tracking Prefix") {
-                        TextField("CP", text: $viewModel.settings.trackingPrefix)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 80)
-                    }
+                    formField(label: "Tracking Prefix", placeholder: "CP", text: $viewModel.settings.trackingPrefix, width: 80)
 
                     Text("Example: \(viewModel.settings.trackingPrefix)-\(String(Int(Date().timeIntervalSince1970).description.suffix(6)))-0001")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(8)
+                .padding(12)
             }
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func formField(label: String, placeholder: String, text: Binding<String>, width: CGFloat) -> some View {
+        LabeledContent(label) {
+            TextField(placeholder, text: text)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: width)
         }
     }
 }
