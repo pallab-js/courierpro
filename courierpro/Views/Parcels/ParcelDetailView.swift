@@ -13,6 +13,7 @@ struct ParcelDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 headerSection
+                actionsSection
                 Divider()
                 statusSection
                 Divider()
@@ -23,24 +24,6 @@ struct ParcelDetailView: View {
                 statusHistorySection
             }
             .padding()
-        }
-        .navigationTitle(parcel.trackingNumber)
-        .toolbar {
-            ToolbarItemGroup {
-                Button(action: { showingStatusUpdate = true }) {
-                    Label("Update Status", systemImage: "arrow.triangle.2.circlepath")
-                }
-                Button(action: { showingDriverAssignment = true }) {
-                    Label("Assign Driver", systemImage: "car.fill")
-                }
-                Button(action: { showingEditSheet = true }) {
-                    Label("Edit", systemImage: "pencil")
-                }
-                Button(action: { showingDeleteConfirmation = true }) {
-                    Label("Delete", systemImage: "trash")
-                }
-                .foregroundColor(.red)
-            }
         }
         .sheet(isPresented: $showingEditSheet) {
             ParcelEditView(parcel: parcel, viewModel: viewModel)
@@ -79,6 +62,23 @@ struct ParcelDetailView: View {
             Spacer()
             StatusBadge(status: parcel.status)
                 .scaleEffect(1.2)
+        }
+    }
+
+    private var actionsSection: some View {
+        HStack(spacing: 12) {
+            Button(action: { showingStatusUpdate = true }) {
+                Label("Update Status", systemImage: "arrow.triangle.2.circlepath")
+            }
+            Button(action: { showingDriverAssignment = true }) {
+                Label("Assign Driver", systemImage: "car.fill")
+            }
+            Button(action: { showingEditSheet = true }) {
+                Label("Edit", systemImage: "pencil")
+            }
+            Button(role: .destructive, action: { showingDeleteConfirmation = true }) {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 
@@ -227,9 +227,12 @@ struct ParcelDetailView: View {
                     .padding(.vertical, 4)
                 }
             } else {
-                Text("No status history available")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 60)
+                EmptyStateView(
+                    icon: "clock.arrow.circlepath",
+                    title: "No Status History",
+                    message: "Status updates will appear here as the parcel progresses"
+                )
+                .frame(maxWidth: .infinity, minHeight: 60)
             }
         }
     }
@@ -292,9 +295,9 @@ struct ContactCard: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(10)
+        .padding(16)
         .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(8)
+        .cornerRadius(10)
     }
 }
 

@@ -81,12 +81,8 @@ struct StatusUpdateView: View {
             }
         }
         .padding()
-        .frame(width: 450, height: 420)
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .frame(minWidth: 400, minHeight: 380)
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     private func updateStatus() {

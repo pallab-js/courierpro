@@ -11,7 +11,6 @@ struct ReportsView: View {
     @State private var startDate = Date()
     @State private var endDate = Date()
     @State private var exportedURL: URL?
-    @State private var isLoading = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -31,15 +30,19 @@ struct ReportsView: View {
                 Button(action: exportCurrentReport) {
                     Label("Export CSV", systemImage: "square.and.arrow.up")
                 }
-                Picker("Report", selection: $selectedReport) {
-                    ForEach(ReportType.allCases) { report in
-                        Text(report.displayName).tag(report)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 300)
             }
             .padding()
+
+            Divider()
+
+            Picker("Report", selection: $selectedReport) {
+                ForEach(ReportType.allCases) { report in
+                    Text(report.displayName).tag(report)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
 
             Divider()
 
@@ -56,41 +59,38 @@ struct ReportsView: View {
                 Divider()
             }
 
-            if isLoading {
-                LoadingView()
-            } else {
-                switch selectedReport {
-                case .overview:
-                    OverviewReportView(
-                        parcelViewModel: parcelViewModel,
-                        customerViewModel: customerViewModel,
-                        driverViewModel: driverViewModel,
-                        invoiceViewModel: invoiceViewModel,
-                        dateRange: dateRange
-                    )
-                case .revenue:
-                    RevenueReportView(invoiceViewModel: invoiceViewModel, dateRange: dateRange)
-                case .deliveries:
-                    DeliveryReportView(parcelViewModel: parcelViewModel, dateRange: dateRange)
-                case .drivers:
-                    DriverReportView(driverViewModel: driverViewModel, parcelViewModel: parcelViewModel, dateRange: dateRange)
-                }
+            switch selectedReport {
+            case .overview:
+                OverviewReportView(
+                    parcelViewModel: parcelViewModel,
+                    customerViewModel: customerViewModel,
+                    driverViewModel: driverViewModel,
+                    invoiceViewModel: invoiceViewModel,
+                    dateRange: dateRange
+                )
+            case .revenue:
+                RevenueReportView(invoiceViewModel: invoiceViewModel, dateRange: dateRange)
+            case .deliveries:
+                DeliveryReportView(parcelViewModel: parcelViewModel, dateRange: dateRange)
+            case .drivers:
+                DriverReportView(driverViewModel: driverViewModel, parcelViewModel: parcelViewModel, dateRange: dateRange)
             }
         }
         .task {
-            isLoading = true
             parcelViewModel.loadParcels()
             customerViewModel.loadCustomers()
             driverViewModel.loadDrivers()
             invoiceViewModel.loadInvoices()
-            isLoading = false
         }
         .sheet(isPresented: $showingDatePicker) {
             DateRangePicker(startDate: $startDate, endDate: $endDate) { range in
                 dateRange = range
             }
         }
-        .alert("Export Complete", isPresented: .constant(exportedURL != nil)) {
+        .alert("Export Complete", isPresented: Binding(
+            get: { exportedURL != nil },
+            set: { if !$0 { exportedURL = nil } }
+        )) {
             Button("OK") { exportedURL = nil }
         } message: {
             if let url = exportedURL {
@@ -134,12 +134,14 @@ struct DateRangePicker: View {
     var body: some View {
         VStack(spacing: 20) {
             Text("Select Date Range")
-                .font(.headline)
+                .font(.title2)
+                .fontWeight(.bold)
 
             DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
             DatePicker("End Date", selection: $endDate, displayedComponents: .date)
 
             HStack {
+                Spacer()
                 Button("Cancel") {
                     dismiss()
                 }
@@ -199,7 +201,7 @@ struct OverviewReportView: View {
             VStack(alignment: .leading, spacing: 20) {
                 Text("Business Overview")
                     .font(.title2)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
 
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
@@ -213,7 +215,7 @@ struct OverviewReportView: View {
 
                 Text("Delivery Status Breakdown")
                     .font(.title3)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .padding(.top)
 
                 LazyVGrid(columns: [
@@ -234,7 +236,7 @@ struct OverviewReportView: View {
 
                 Text("Financial Summary")
                     .font(.title3)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .padding(.top)
 
                 LazyVGrid(columns: [
@@ -266,7 +268,7 @@ struct RevenueReportView: View {
             VStack(alignment: .leading, spacing: 20) {
                 Text("Revenue Analysis")
                     .font(.title2)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
 
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
@@ -282,7 +284,7 @@ struct RevenueReportView: View {
 
                 Text("Invoices by Status")
                     .font(.title3)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .padding(.top)
 
                 ForEach(InvoiceStatus.allCases) { status in
@@ -322,7 +324,7 @@ struct DeliveryReportView: View {
             VStack(alignment: .leading, spacing: 20) {
                 Text("Delivery Performance")
                     .font(.title2)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
 
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
@@ -336,7 +338,7 @@ struct DeliveryReportView: View {
 
                 Text("Parcels by Status")
                     .font(.title3)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .padding(.top)
 
                 ForEach(DeliveryStatus.allCases) { status in
@@ -380,7 +382,7 @@ struct DriverReportView: View {
             VStack(alignment: .leading, spacing: 20) {
                 Text("Driver Performance")
                     .font(.title2)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
 
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
@@ -394,7 +396,7 @@ struct DriverReportView: View {
 
                 Text("Driver Assignments")
                     .font(.title3)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .padding(.top)
 
                 ForEach(driverViewModel.drivers) { driver in
@@ -402,7 +404,7 @@ struct DriverReportView: View {
                     let activeCount = driver.assignedParcels?.filter { $0.status != .delivered && $0.status != .failed }.count ?? 0
                     HStack {
                         Circle()
-                            .fill(!driver.isAvailable ? Color.red : (driver.isBusy ? Color.orange : Color.green))
+                            .fill(driver.statusColor)
                             .frame(width: 10, height: 10)
                         VStack(alignment: .leading) {
                             Text(driver.name)

@@ -73,15 +73,11 @@ struct DriverFormView: View {
             }
         }
         .padding()
-        .frame(width: 420, height: 320)
+        .frame(minWidth: 380, minHeight: 280)
         .onAppear {
             focusedField = .name
         }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     private func addDriver() {

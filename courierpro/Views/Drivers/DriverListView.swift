@@ -103,7 +103,7 @@ struct DriverRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(!driver.isAvailable ? Color.red : (driver.isBusy ? Color.orange : Color.green))
+                .fill(driver.statusColor)
                 .frame(width: 10, height: 10)
                 .accessibilityHidden(true)
 
@@ -124,10 +124,10 @@ struct DriverRow: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                Text(!driver.isAvailable ? "Unavailable" : (driver.isBusy ? "Busy" : "Available"))
+                Text(driver.statusLabel)
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(!driver.isAvailable ? .red : (driver.isBusy ? .orange : .green))
+                    .foregroundColor(driver.statusColor)
             }
         }
         .padding(.vertical, 4)
@@ -136,7 +136,7 @@ struct DriverRow: View {
             onSelect()
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(driver.name), License \(driver.licenseNumber), \(!driver.isAvailable ? "Unavailable" : (driver.isBusy ? "Busy" : "Available"))")
+        .accessibilityLabel("\(driver.name), License \(driver.licenseNumber), \(driver.statusLabel)")
         .accessibilityHint("Double tap to view details")
     }
 }

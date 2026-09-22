@@ -57,12 +57,38 @@ struct courierproApp: App {
                 }
                 .keyboardShortcut("3", modifiers: .command)
             }
+
+            CommandGroup(after: .toolbar) {
+                Button("Dashboard") {
+                    NotificationCenter.default.post(name: .navigateToDashboard, object: nil)
+                }
+                .keyboardShortcut("0", modifiers: .command)
+
+                Button("Invoices") {
+                    NotificationCenter.default.post(name: .navigateToInvoices, object: nil)
+                }
+                .keyboardShortcut("4", modifiers: .command)
+
+                Button("Reports") {
+                    NotificationCenter.default.post(name: .navigateToReports, object: nil)
+                }
+                .keyboardShortcut("5", modifiers: .command)
+
+                Button("Settings") {
+                    NotificationCenter.default.post(name: .navigateToSettings, object: nil)
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
         }
     }
 }
 
 extension Notification.Name {
+    static let navigateToDashboard = Notification.Name("com.courierpro.navigateToDashboard")
     static let navigateToParcels = Notification.Name("com.courierpro.navigateToParcels")
     static let navigateToCustomers = Notification.Name("com.courierpro.navigateToCustomers")
     static let navigateToDrivers = Notification.Name("com.courierpro.navigateToDrivers")
+    static let navigateToInvoices = Notification.Name("com.courierpro.navigateToInvoices")
+    static let navigateToReports = Notification.Name("com.courierpro.navigateToReports")
+    static let navigateToSettings = Notification.Name("com.courierpro.navigateToSettings")
 }

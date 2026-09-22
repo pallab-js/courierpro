@@ -20,19 +20,29 @@ struct RecurringInvoiceListView: View {
 
             Divider()
 
+            HStack {
+                SearchField(text: $viewModel.searchText, placeholder: "Search recurring invoices...")
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+
+            Divider()
+
             if viewModel.isLoading {
                 LoadingView()
-            } else if viewModel.recurringInvoices.isEmpty {
+            } else if viewModel.filteredRecurringInvoices.isEmpty {
                 EmptyStateView(
                     icon: "arrow.clockwise",
-                    title: "No Recurring Invoices",
-                    message: "Set up automatic invoice generation on a schedule",
-                    actionTitle: "Create Recurring",
-                    action: { showingCreateSheet = true }
+                    title: viewModel.recurringInvoices.isEmpty ? "No Recurring Invoices" : "No Results Found",
+                    message: viewModel.recurringInvoices.isEmpty
+                        ? "Set up automatic invoice generation on a schedule"
+                        : "Try adjusting your search criteria",
+                    actionTitle: viewModel.recurringInvoices.isEmpty ? "Create Recurring" : nil,
+                    action: viewModel.recurringInvoices.isEmpty ? { showingCreateSheet = true } : nil
                 )
             } else {
                 List {
-                    ForEach(viewModel.recurringInvoices) { recurring in
+                    ForEach(viewModel.filteredRecurringInvoices) { recurring in
                         RecurringInvoiceRow(recurring: recurring) {
                             viewingRecurring = recurring
                         }
@@ -88,7 +98,8 @@ struct RecurringInvoiceRow: View {
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
-                    .background(Color.blue.opacity(0.1))
+                    .background(Color.accentColor.opacity(0.1))
+                    .foregroundColor(.accentColor)
                     .cornerRadius(4)
                 Text("\(AppSettings.shared.currencySymbol)\(String(format: "%.2f", recurring.amount))")
                     .font(.subheadline)
@@ -136,6 +147,7 @@ struct RecurringInvoiceFormView: View {
     @State private var availableCustomers: [Customer] = []
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var isLoadingCustomers = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -145,7 +157,11 @@ struct RecurringInvoiceFormView: View {
 
             Form {
                 Section("Basic Info") {
-                    TextField("Invoice Name", text: $name)
+                    HStack {
+                        Text("Name:")
+                        TextField("Invoice Name", text: $name)
+                            .textFieldStyle(.roundedBorder)
+                    }
 
                     Picker("Customer", selection: $selectedCustomer) {
                         Text("Choose a customer").tag(nil as Customer?)
@@ -201,21 +217,18 @@ struct RecurringInvoiceFormView: View {
             }
         }
         .padding()
-        .frame(width: 500, height: 550)
+        .frame(minWidth: 450, minHeight: 500)
         .task {
             loadCustomers()
         }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     private func loadCustomers() {
         let customerViewModel = CustomerViewModel()
         customerViewModel.loadCustomers()
         availableCustomers = customerViewModel.customers
+        isLoadingCustomers = false
     }
 
     private func createRecurring() {

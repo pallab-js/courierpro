@@ -17,7 +17,7 @@ struct EmptyStateView: View {
             VStack(spacing: 8) {
                 Text(title)
                     .font(.title2)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .foregroundColor(.primary)
 
                 Text(message)
@@ -72,5 +72,25 @@ struct ErrorAlert: ViewModifier {
 extension View {
     func errorAlert(isPresented: Binding<Bool>, message: String?) -> some View {
         modifier(ErrorAlert(isPresented: isPresented, message: message))
+    }
+}
+
+struct CardModifier: ViewModifier {
+    var cornerRadius: CGFloat = 10
+    var shadowOpacity: Double = 0.06
+    var shadowRadius: CGFloat = 4
+    var shadowY: CGFloat = 1
+
+    func body(content: Content) -> some View {
+        content
+            .background(Color(NSColor.controlBackgroundColor))
+            .cornerRadius(cornerRadius)
+            .shadow(color: .black.opacity(shadowOpacity), radius: shadowRadius, y: shadowY)
+    }
+}
+
+extension View {
+    func cardStyle(cornerRadius: CGFloat = 10, shadowOpacity: Double = 0.06, shadowRadius: CGFloat = 4, shadowY: CGFloat = 1) -> some View {
+        modifier(CardModifier(cornerRadius: cornerRadius, shadowOpacity: shadowOpacity, shadowRadius: shadowRadius, shadowY: shadowY))
     }
 }

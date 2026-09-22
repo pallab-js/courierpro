@@ -90,12 +90,8 @@ struct CustomerEditView: View {
             }
         }
         .padding()
-        .frame(width: 450, height: 400)
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .frame(minWidth: 400, minHeight: 360)
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     private func saveChanges() {

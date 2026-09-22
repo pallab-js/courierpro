@@ -47,8 +47,11 @@ struct ContentView: View {
             case .settings:
                 SettingsView()
             case .none:
-                Text("Select an item from the sidebar")
-                    .foregroundColor(.secondary)
+                EmptyStateView(
+                    icon: "sidebar.left",
+                    title: "Welcome to CourierPro",
+                    message: "Select an item from the sidebar to get started"
+                )
             }
         }
         .frame(minWidth: 800, minHeight: 600)
@@ -61,10 +64,23 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .navigateToDrivers)) { _ in
             selectedItem = .drivers
         }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToDashboard)) { _ in
+            selectedItem = .dashboard
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToInvoices)) { _ in
+            selectedItem = .invoices
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToReports)) { _ in
+            selectedItem = .reports
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToSettings)) { _ in
+            selectedItem = .settings
+        }
         .toolbar {
             ToolbarItemGroup(placement: .automatic) {
                 Menu {
                     Button("Export Parcels") { exportParcels() }
+                        .keyboardShortcut("e", modifiers: [.command, .shift])
                     Button("Export Customers") { exportCustomers() }
                     Button("Export Drivers") { exportDrivers() }
                     Divider()
@@ -87,11 +103,7 @@ struct ContentView: View {
         ) { result in
             handleImport(result)
         }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .errorAlert(isPresented: $showingError, message: errorMessage)
         .alert("Success", isPresented: $showingSuccess) {
             Button("OK") { }
         } message: {
@@ -111,7 +123,7 @@ struct ContentView: View {
                     }
                     .padding(24)
                     .background(.ultraThinMaterial)
-                    .cornerRadius(12)
+                    .cornerRadius(10)
                 }
             }
         }

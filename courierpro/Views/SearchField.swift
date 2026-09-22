@@ -11,6 +11,7 @@ struct SearchField: View {
                 .accessibilityHidden(true)
             TextField(placeholder, text: $text)
                 .textFieldStyle(.plain)
+                .accessibilityLabel(placeholder)
             if !text.isEmpty {
                 Button(action: { text = "" }) {
                     Image(systemName: "xmark.circle.fill")
@@ -20,7 +21,8 @@ struct SearchField: View {
                 .accessibilityLabel("Clear search")
             }
         }
-        .padding(8)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(8)
     }

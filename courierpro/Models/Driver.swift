@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import SwiftUI
 
 @Model
 final class Driver {
@@ -17,6 +18,18 @@ final class Driver {
     var isBusy: Bool {
         guard let parcels = assignedParcels else { return false }
         return parcels.contains { $0.status != .delivered && $0.status != .failed }
+    }
+
+    var statusColor: Color {
+        if !isAvailable { return .red }
+        if isBusy { return .orange }
+        return .green
+    }
+
+    var statusLabel: String {
+        if !isAvailable { return "Unavailable" }
+        if isBusy { return "Busy" }
+        return "Available"
     }
 
     init(

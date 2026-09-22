@@ -68,12 +68,8 @@ struct DriverEditView: View {
             }
         }
         .padding()
-        .frame(width: 420, height: 320)
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .frame(minWidth: 380, minHeight: 280)
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     private func saveChanges() {

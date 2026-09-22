@@ -13,6 +13,7 @@ struct InvoiceFormView: View {
 
     @State private var availableCustomers: [Customer] = []
     @State private var availableParcels: [Parcel] = []
+    @State private var isLoadingData = true
 
     @State private var showingError = false
     @State private var errorMessage = ""
@@ -106,15 +107,11 @@ struct InvoiceFormView: View {
             }
         }
         .padding()
-        .frame(width: 550, height: 550)
+        .frame(minWidth: 500, minHeight: 500)
         .task {
             await loadData()
         }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     private func loadData() async {
@@ -135,6 +132,7 @@ struct InvoiceFormView: View {
         let invoicedParcelIds = Set(existingItems.compactMap { $0.parcel?.id })
 
         availableParcels = parcelViewModel.parcels.filter { $0.status == .delivered && !invoicedParcelIds.contains($0.id) }
+        isLoadingData = false
     }
 
     private func createInvoice() {

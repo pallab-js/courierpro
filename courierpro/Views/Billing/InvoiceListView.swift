@@ -86,6 +86,7 @@ struct InvoiceListView: View {
         .sheet(item: $viewingInvoice) { invoice in
             InvoiceDetailView(invoice: invoice)
         }
+        .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
         .alert("Delete Invoice", isPresented: Binding(
             get: { deleteConfirmation != nil },
             set: { if !$0 { deleteConfirmation = nil } }

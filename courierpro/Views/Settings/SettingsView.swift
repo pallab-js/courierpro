@@ -71,7 +71,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Business Information")
                 .font(.title2)
-                .fontWeight(.semibold)
+                .fontWeight(.bold)
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
@@ -108,7 +108,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Currency")
                 .font(.title2)
-                .fontWeight(.semibold)
+                .fontWeight(.bold)
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
@@ -142,7 +142,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Invoice Defaults")
                 .font(.title2)
-                .fontWeight(.semibold)
+                .fontWeight(.bold)
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
@@ -170,7 +170,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Tracking")
                 .font(.title2)
-                .fontWeight(.semibold)
+                .fontWeight(.bold)
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {

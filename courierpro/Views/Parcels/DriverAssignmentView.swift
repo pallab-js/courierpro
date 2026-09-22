@@ -29,10 +29,9 @@ struct DriverAssignmentView: View {
                                 .foregroundColor(.accentColor)
                             Text(currentDriver.name)
                             Spacer()
-                            Button("Unassign") {
+                            Button("Unassign", role: .destructive) {
                                 unassignDriver()
                             }
-                            .foregroundColor(.red)
                         }
                     } else {
                         HStack {
@@ -46,8 +45,12 @@ struct DriverAssignmentView: View {
 
                 Section("Available Drivers") {
                     if availableDrivers.isEmpty {
-                        Text("No available drivers")
-                            .foregroundColor(.secondary)
+                        EmptyStateView(
+                            icon: "car.fill",
+                            title: "No Available Drivers",
+                            message: "All drivers are currently assigned or unavailable"
+                        )
+                        .frame(maxWidth: .infinity, minHeight: 60)
                     } else {
                         ForEach(availableDrivers) { driver in
                             HStack {
@@ -92,15 +95,11 @@ struct DriverAssignmentView: View {
             }
         }
         .padding()
-        .frame(width: 450, height: 400)
+        .frame(minWidth: 400, minHeight: 360)
         .task {
             loadAvailableDrivers()
         }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     private func loadAvailableDrivers() {

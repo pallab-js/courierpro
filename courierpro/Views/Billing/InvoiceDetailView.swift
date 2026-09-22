@@ -11,6 +11,7 @@ struct InvoiceDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 headerSection
+                actionsSection
                 Divider()
                 amountsSection
                 Divider()
@@ -19,28 +20,6 @@ struct InvoiceDetailView: View {
                 paymentsSection
             }
             .padding()
-        }
-        .navigationTitle(invoice.invoiceNumber)
-        .toolbar {
-            ToolbarItemGroup {
-                if invoice.status == .draft {
-                    Button(action: {
-                        viewModel.updateInvoiceStatus(invoice, status: .pending)
-                    }) {
-                        Label("Send", systemImage: "paperplane")
-                    }
-                }
-                if invoice.status == .pending {
-                    Button(action: { showingPaymentSheet = true }) {
-                        Label("Record Payment", systemImage: "creditcard")
-                    }
-                }
-                ExportButton(invoice: invoice)
-                Button(action: { showingDeleteConfirmation = true }) {
-                    Label("Delete", systemImage: "trash")
-                }
-                .foregroundColor(.red)
-            }
         }
         .sheet(isPresented: $showingPaymentSheet) {
             PaymentFormView(invoice: invoice, viewModel: viewModel)
@@ -73,6 +52,27 @@ struct InvoiceDetailView: View {
             Spacer()
             InvoiceStatusBadge(status: invoice.status)
                 .scaleEffect(1.2)
+        }
+    }
+
+    private var actionsSection: some View {
+        HStack(spacing: 12) {
+            if invoice.status == .draft {
+                Button(action: {
+                    viewModel.updateInvoiceStatus(invoice, status: .pending)
+                }) {
+                    Label("Send", systemImage: "paperplane")
+                }
+            }
+            if invoice.status == .pending {
+                Button(action: { showingPaymentSheet = true }) {
+                    Label("Record Payment", systemImage: "creditcard")
+                }
+            }
+            ExportButton(invoice: invoice)
+            Button(role: .destructive, action: { showingDeleteConfirmation = true }) {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 
@@ -154,9 +154,12 @@ struct InvoiceDetailView: View {
                     .padding(.vertical, 4)
                 }
             } else {
-                Text("No items")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 40)
+                EmptyStateView(
+                    icon: "doc.text",
+                    title: "No Line Items",
+                    message: "Add parcels to this invoice to create line items"
+                )
+                .frame(maxWidth: .infinity, minHeight: 40)
             }
         }
     }
@@ -192,9 +195,12 @@ struct InvoiceDetailView: View {
                     .padding(.vertical, 4)
                 }
             } else {
-                Text("No payments recorded")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 40)
+                EmptyStateView(
+                    icon: "creditcard",
+                    title: "No Payments",
+                    message: "Payment history will appear here"
+                )
+                .frame(maxWidth: .infinity, minHeight: 40)
             }
         }
     }

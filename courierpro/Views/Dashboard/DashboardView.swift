@@ -30,7 +30,7 @@ struct DashboardView: View {
             }
             .padding(24)
         }
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(Color(NSColor.controlBackgroundColor))
         .task {
             parcelViewModel.loadParcels()
             customerViewModel.loadCustomers()
@@ -57,7 +57,8 @@ struct DashboardView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Text("CourierPro Dashboard")
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
                 Text(Date().formatted(date: .complete, time: .omitted))
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -66,25 +67,25 @@ struct DashboardView: View {
             Spacer()
 
             HStack(spacing: 10) {
-                quickAction(title: "New Parcel", icon: "shippingbox.fill", color: .blue) {
+                quickAction(title: "New Parcel", icon: "shippingbox.fill", color: .blue, shortcut: "n") {
                     showingCreateParcel = true
                 }
-                quickAction(title: "New Customer", icon: "person.fill.badge.plus", color: .orange) {
+                quickAction(title: "New Customer", icon: "person.fill.badge.plus", color: .orange, shortcut: "shift+n") {
                     showingCreateCustomer = true
                 }
-                quickAction(title: "New Invoice", icon: "doc.text.badge.plus", color: .green) {
+                quickAction(title: "New Invoice", icon: "doc.text.badge.plus", color: .green, shortcut: "i") {
                     showingCreateInvoice = true
                 }
             }
         }
         .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(.ultraThinMaterial)
         )
     }
 
-    private func quickAction(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
+    private func quickAction(title: String, icon: String, color: Color, shortcut: String? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: icon)
@@ -102,6 +103,7 @@ struct DashboardView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
+        .accessibilityHint("Creates a new \(title.replacingOccurrences(of: "New ", with: "").lowercased())")
     }
 
     // MARK: - KPI Section
@@ -189,7 +191,12 @@ struct DashboardView: View {
             }
 
             if parcelViewModel.parcels.isEmpty {
-                emptyState(message: "No parcels yet")
+                EmptyStateView(
+                    icon: "shippingbox",
+                    title: "No Parcels Yet",
+                    message: "Create your first parcel to see delivery status"
+                )
+                .frame(height: 120)
             } else {
                 statusDistribution
             }
@@ -210,6 +217,7 @@ struct DashboardView: View {
                         .font(.caption)
                         .foregroundColor(status.color)
                         .frame(width: 16)
+                        .accessibilityHidden(true)
 
                     Text(status.displayName)
                         .font(.caption)
@@ -225,6 +233,7 @@ struct DashboardView: View {
                         }
                     }
                     .frame(height: 6)
+                    .accessibilityHidden(true)
 
                     Text("\(count)")
                         .font(.caption2)
@@ -232,6 +241,8 @@ struct DashboardView: View {
                         .foregroundColor(.secondary)
                         .frame(width: 24, alignment: .trailing)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(status.displayName): \(count) parcels, \(Int(pct * 100)) percent")
             }
         }
     }
@@ -262,6 +273,7 @@ struct DashboardView: View {
             Image(systemName: icon)
                 .foregroundColor(color)
                 .frame(width: 16)
+                .accessibilityHidden(true)
             Text(title)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -270,6 +282,8 @@ struct DashboardView: View {
                 .font(.subheadline)
                 .fontWeight(.semibold)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 
     private func infoRow(label: String, value: String) -> some View {
@@ -282,6 +296,8 @@ struct DashboardView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 
     // MARK: - Recent Parcels
@@ -292,7 +308,12 @@ struct DashboardView: View {
                 .font(.headline)
 
             if parcelViewModel.parcels.isEmpty {
-                emptyState(message: "No parcels yet")
+                EmptyStateView(
+                    icon: "shippingbox",
+                    title: "No Parcels Yet",
+                    message: "Create your first parcel to see recent deliveries"
+                )
+                .frame(height: 120)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     recentParcelsTable
@@ -388,7 +409,7 @@ struct DashboardView: View {
                 .frame(width: 70, alignment: .trailing)
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 7)
+        .padding(.vertical, 4)
         .background(isEven ? Color(NSColor.controlBackgroundColor).opacity(0.4) : Color.clear)
     }
 
@@ -397,20 +418,7 @@ struct DashboardView: View {
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 10)
             .fill(Color(NSColor.controlBackgroundColor))
-            .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
-    }
-
-    private func emptyState(message: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: "tray")
-                .font(.title2)
-                .foregroundColor(.secondary.opacity(0.5))
-            Text(message)
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 120)
+            .shadow(color: .black.opacity(0.06), radius: 4, y: 1)
     }
 
 }
@@ -438,10 +446,10 @@ struct KPICard: View {
                 .font(.caption)
                 .foregroundColor(.white.opacity(0.85))
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(gradient)
                 .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
         )

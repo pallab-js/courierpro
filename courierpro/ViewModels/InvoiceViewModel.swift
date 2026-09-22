@@ -11,6 +11,7 @@ final class InvoiceViewModel: ObservableObject {
     }
     @Published var pricingRules: [PricingRule] = []
     @Published var searchText: String = ""
+    @Published var pricingSearchText: String = ""
     @Published var selectedStatus: InvoiceStatus?
     @Published var isLoadingInvoices = false
     @Published var isLoadingPricingRules = false
@@ -44,6 +45,16 @@ final class InvoiceViewModel: ObservableObject {
         }
 
         return results
+    }
+
+    var filteredPricingRules: [PricingRule] {
+        if pricingSearchText.isEmpty {
+            return pricingRules
+        }
+        return pricingRules.filter {
+            $0.name.localizedCaseInsensitiveContains(pricingSearchText) ||
+            $0.pricingType.displayName.localizedCaseInsensitiveContains(pricingSearchText)
+        }
     }
 
     private func updateCachedFinancials() {

@@ -11,24 +11,13 @@ struct DriverDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 headerSection
+                actionsSection
                 Divider()
                 infoSection
                 Divider()
                 assignedParcelsSection
             }
             .padding()
-        }
-        .navigationTitle(driver.name)
-        .toolbar {
-            ToolbarItemGroup {
-                Button(action: { showingEditSheet = true }) {
-                    Label("Edit", systemImage: "pencil")
-                }
-                Button(action: { showingDeleteConfirmation = true }) {
-                    Label("Delete", systemImage: "trash")
-                }
-                .foregroundColor(.red)
-            }
         }
         .sheet(isPresented: $showingEditSheet) {
             DriverEditView(driver: driver, viewModel: viewModel)
@@ -59,17 +48,32 @@ struct DriverDetailView: View {
                     .foregroundColor(.secondary)
             }
             Spacer()
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(!driver.isAvailable ? Color.red : (driver.isBusy ? Color.orange : Color.green))
-                    .frame(width: 12, height: 12)
-                Text(!driver.isAvailable ? "Unavailable" : (driver.isBusy ? "Busy" : "Available"))
-                    .font(.headline)
-                    .foregroundColor(!driver.isAvailable ? .red : (driver.isBusy ? .orange : .green))
+            driverStatusBadge
+        }
+    }
+
+    private var driverStatusBadge: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(driver.statusColor)
+                .frame(width: 12, height: 12)
+            Text(driver.statusLabel)
+                .font(.headline)
+                .foregroundColor(driver.statusColor)
+        }
+        .padding(10)
+        .background(Color(NSColor.controlBackgroundColor))
+        .cornerRadius(10)
+    }
+
+    private var actionsSection: some View {
+        HStack(spacing: 12) {
+            Button(action: { showingEditSheet = true }) {
+                Label("Edit", systemImage: "pencil")
             }
-            .padding(10)
-            .background(Color(NSColor.controlBackgroundColor))
-            .cornerRadius(10)
+            Button(role: .destructive, action: { showingDeleteConfirmation = true }) {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 
@@ -137,9 +141,12 @@ struct DriverDetailView: View {
                     .padding(.vertical, 4)
                 }
             } else {
-                Text("No parcels currently assigned")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 60)
+                EmptyStateView(
+                    icon: "shippingbox",
+                    title: "No Assigned Parcels",
+                    message: "Parcels assigned to this driver will appear here"
+                )
+                .frame(maxWidth: .infinity, minHeight: 60)
             }
         }
     }

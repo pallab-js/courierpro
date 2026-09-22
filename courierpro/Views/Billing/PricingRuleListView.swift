@@ -21,19 +21,29 @@ struct PricingRuleListView: View {
 
             Divider()
 
+            HStack {
+                SearchField(text: $viewModel.pricingSearchText, placeholder: "Search pricing rules...")
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+
+            Divider()
+
             if viewModel.isLoadingPricingRules {
                 LoadingView()
-            } else if viewModel.pricingRules.isEmpty {
+            } else if viewModel.filteredPricingRules.isEmpty {
                 EmptyStateView(
                     icon: "dollarsign.circle",
-                    title: "No Pricing Rules",
-                    message: "Create your first pricing rule to get started",
-                    actionTitle: "Create Rule",
-                    action: { showingCreateSheet = true }
+                    title: viewModel.pricingRules.isEmpty ? "No Pricing Rules" : "No Rules Found",
+                    message: viewModel.pricingRules.isEmpty
+                        ? "Create your first pricing rule to get started"
+                        : "Try adjusting your search criteria",
+                    actionTitle: viewModel.pricingRules.isEmpty ? "Create Rule" : nil,
+                    action: viewModel.pricingRules.isEmpty ? { showingCreateSheet = true } : nil
                 )
             } else {
                 List {
-                    ForEach(viewModel.pricingRules) { rule in
+                    ForEach(viewModel.filteredPricingRules) { rule in
                         PricingRuleRow(rule: rule) {
                             editingRule = rule
                         }
@@ -71,6 +81,7 @@ struct PricingRuleListView: View {
         .sheet(item: $editingRule) { rule in
             PricingRuleEditView(rule: rule, viewModel: viewModel)
         }
+        .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
         .alert("Delete Pricing Rule", isPresented: Binding(
             get: { deleteConfirmation != nil },
             set: { if !$0 { deleteConfirmation = nil } }

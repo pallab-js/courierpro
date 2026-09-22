@@ -7,9 +7,20 @@ final class RecurringInvoiceViewModel: ObservableObject {
     private let persistenceService: PersistenceService
 
     @Published var recurringInvoices: [RecurringInvoice] = []
+    @Published var searchText: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showError = false
+
+    var filteredRecurringInvoices: [RecurringInvoice] {
+        if searchText.isEmpty {
+            return recurringInvoices
+        }
+        return recurringInvoices.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.customer?.name.localizedCaseInsensitiveContains(searchText) == true
+        }
+    }
 
     init(persistenceService: PersistenceService? = nil) {
         self.persistenceService = persistenceService ?? PersistenceService.shared

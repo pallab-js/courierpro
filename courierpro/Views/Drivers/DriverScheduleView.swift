@@ -60,14 +60,14 @@ struct DriverScheduleCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Circle()
-                    .fill(!schedule.driver.isAvailable ? Color.red : (schedule.driver.isBusy ? Color.orange : Color.green))
+                    .fill(schedule.driver.statusColor)
                     .frame(width: 12, height: 12)
                 Text(schedule.driver.name)
                     .font(.headline)
                 Spacer()
-                Text(!schedule.driver.isAvailable ? "Unavailable" : (schedule.driver.isBusy ? "Busy" : "Available"))
+                Text(schedule.driver.statusLabel)
                     .font(.caption)
-                    .foregroundColor(!schedule.driver.isAvailable ? .red : (schedule.driver.isBusy ? .orange : .green))
+                    .foregroundColor(schedule.driver.statusColor)
             }
 
             if !schedule.assignedParcels.isEmpty {
@@ -134,7 +134,7 @@ struct DriverScheduleCard: View {
         }
         .padding()
         .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(12)
+        .cornerRadius(10)
     }
 
     private func formatTime(_ timeInterval: TimeInterval) -> String {

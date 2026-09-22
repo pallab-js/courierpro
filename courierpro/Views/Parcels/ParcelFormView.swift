@@ -14,6 +14,7 @@ struct ParcelFormView: View {
     @State private var availableReceivers: [Customer] = []
     @State private var selectedSender: Customer?
     @State private var selectedReceiver: Customer?
+    @State private var isLoadingCustomers = true
 
     @State private var showingError = false
     @State private var errorMessage = ""
@@ -31,19 +32,39 @@ struct ParcelFormView: View {
 
             Form {
                 Section("Sender") {
-                    Picker("Select Sender", selection: $selectedSender) {
-                        Text("Choose a customer").tag(nil as Customer?)
-                        ForEach(availableSenders) { customer in
-                            Text(customer.name).tag(customer as Customer?)
+                    if isLoadingCustomers {
+                        HStack {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text("Loading customers...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    } else {
+                        Picker("Select Sender", selection: $selectedSender) {
+                            Text("Choose a customer").tag(nil as Customer?)
+                            ForEach(availableSenders) { customer in
+                                Text(customer.name).tag(customer as Customer?)
+                            }
                         }
                     }
                 }
 
                 Section("Receiver") {
-                    Picker("Select Receiver", selection: $selectedReceiver) {
-                        Text("Choose a customer").tag(nil as Customer?)
-                        ForEach(availableReceivers) { customer in
-                            Text(customer.name).tag(customer as Customer?)
+                    if isLoadingCustomers {
+                        HStack {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text("Loading customers...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    } else {
+                        Picker("Select Receiver", selection: $selectedReceiver) {
+                            Text("Choose a customer").tag(nil as Customer?)
+                            ForEach(availableReceivers) { customer in
+                                Text(customer.name).tag(customer as Customer?)
+                            }
                         }
                     }
                 }
@@ -94,16 +115,12 @@ struct ParcelFormView: View {
             }
         }
         .padding()
-        .frame(width: 500, height: 450)
+        .frame(minWidth: 450, minHeight: 400)
         .task {
             await loadCustomers()
             focusedField = .weight
         }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     private func loadCustomers() async {
@@ -111,6 +128,7 @@ struct ParcelFormView: View {
         customerViewModel.loadCustomers()
         availableSenders = customerViewModel.customers
         availableReceivers = customerViewModel.customers
+        isLoadingCustomers = false
     }
 
     private func createParcel() {

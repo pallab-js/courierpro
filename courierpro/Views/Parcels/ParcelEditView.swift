@@ -107,16 +107,12 @@ struct ParcelEditView: View {
             }
         }
         .padding()
-        .frame(width: 500, height: 480)
+        .frame(minWidth: 450, minHeight: 430)
         .task {
             await loadCustomers()
             await loadDrivers()
         }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     private func loadCustomers() async {
