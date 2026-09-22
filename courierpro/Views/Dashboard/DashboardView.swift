@@ -26,7 +26,9 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 24) {
                 heroHeader
                 kpiSection
+                alertsAndTasksRow
                 bottomSection
+                driverAvailabilityCard
             }
             .padding(24)
         }
@@ -177,7 +179,258 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Status Distribution
+    // MARK: - Alerts & Tasks Row
+
+    private var alertsAndTasksRow: some View {
+        HStack(alignment: .top, spacing: 16) {
+            alertsCard
+                .frame(maxWidth: .infinity)
+            pendingTasksCard
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    // MARK: - Alerts Card
+
+    private var alertsCard: some View {
+        let overdueInvoices = invoiceViewModel.invoices.filter { $0.status == .overdue }
+        let failedParcels = parcelViewModel.parcels.filter { $0.status == .failed }
+        let hasAlerts = !overdueInvoices.isEmpty || !failedParcels.isEmpty
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .foregroundColor(hasAlerts ? .red : .green)
+                Text("Alerts")
+                    .font(.headline)
+                Spacer()
+                if hasAlerts {
+                    Text("\(overdueInvoices.count + failedParcels.count)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(.red))
+                }
+            }
+
+            if !hasAlerts {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.title3)
+                        Text("All clear")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            } else {
+                if !overdueInvoices.isEmpty {
+                    alertRow(
+                        icon: "exclamationmark.triangle.fill",
+                        color: .orange,
+                        title: "Overdue Invoices",
+                        detail: "\(overdueInvoices.count) invoice\(overdueInvoices.count == 1 ? "" : "s") past due"
+                    )
+                }
+                if !failedParcels.isEmpty {
+                    alertRow(
+                        icon: "xmark.circle.fill",
+                        color: .red,
+                        title: "Failed Deliveries",
+                        detail: "\(failedParcels.count) parcel\(failedParcels.count == 1 ? "" : "s") need\(failedParcels.count == 1 ? "s" : "" ) attention"
+                    )
+                }
+            }
+        }
+        .padding(16)
+        .background(cardBackground)
+    }
+
+    private func alertRow(icon: String, color: Color, title: String, detail: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .frame(width: 16)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(detail)")
+    }
+
+    // MARK: - Pending Tasks Card
+
+    private var pendingTasksCard: some View {
+        let createdParcels = parcelViewModel.parcels.filter { $0.status == .created }
+        let outForDelivery = parcelViewModel.parcels.filter { $0.status == .outForDelivery }
+        let unpaidInvoices = invoiceViewModel.invoices.filter { $0.status == .pending }
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "clipboard.fill")
+                    .foregroundColor(.blue)
+                Text("Pending Tasks")
+                    .font(.headline)
+                Spacer()
+                let total = createdParcels.count + outForDelivery.count + unpaidInvoices.count
+                if total > 0 {
+                    Text("\(total)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(.blue))
+                }
+            }
+
+            if createdParcels.isEmpty && outForDelivery.isEmpty && unpaidInvoices.isEmpty {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.title3)
+                        Text("Nothing pending")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            } else {
+                if !createdParcels.isEmpty {
+                    taskRow(
+                        icon: "shippingbox",
+                        color: .blue,
+                        title: "Awaiting Pickup",
+                        count: createdParcels.count
+                    )
+                }
+                if !outForDelivery.isEmpty {
+                    taskRow(
+                        icon: "truck",
+                        color: .purple,
+                        title: "Out for Delivery",
+                        count: outForDelivery.count
+                    )
+                }
+                if !unpaidInvoices.isEmpty {
+                    taskRow(
+                        icon: "doc.text",
+                        color: .orange,
+                        title: "Unpaid Invoices",
+                        count: unpaidInvoices.count
+                    )
+                }
+            }
+        }
+        .padding(16)
+        .background(cardBackground)
+    }
+
+    private func taskRow(icon: String, color: Color, title: String, count: Int) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .frame(width: 16)
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+            Spacer()
+            Text("\(count)")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(color)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(count)")
+    }
+
+    // MARK: - Driver Availability Card
+
+    private var driverAvailabilityCard: some View {
+        let total = driverViewModel.drivers.count
+        let available = driverViewModel.availableDrivers.count
+        let busy = driverViewModel.busyDrivers.count
+        let pct = total > 0 ? CGFloat(available) / CGFloat(total) : 0
+
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Image(systemName: "car.fill")
+                    .foregroundColor(.teal)
+                Text("Driver Availability")
+                    .font(.headline)
+                Spacer()
+                Text("\(available) of \(total) available")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            if total == 0 {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 6) {
+                        Image(systemName: "car")
+                            .foregroundColor(.secondary)
+                            .font(.title3)
+                        Text("No drivers registered")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            } else {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.gray.opacity(0.12))
+                        Capsule()
+                            .fill(pct >= 0.5 ? Color.green : pct >= 0.25 ? Color.orange : Color.red)
+                            .frame(width: geo.size.width * pct)
+                    }
+                }
+                .frame(height: 8)
+                .accessibilityHidden(true)
+
+                HStack(spacing: 16) {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 8, height: 8)
+                        Text("Available: \(available)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.orange)
+                            .frame(width: 8, height: 8)
+                        Text("Busy: \(busy)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+        }
+        .padding(16)
+        .background(cardBackground)
+    }
 
     private var statusDistributionCard: some View {
         VStack(alignment: .leading, spacing: 14) {
