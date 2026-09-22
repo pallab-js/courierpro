@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import CryptoKit
 
 @Model
 final class Parcel {
@@ -54,10 +55,13 @@ final class Parcel {
     }
 
     static func generateTrackingNumber() -> String {
-        let prefix = "CP"
-        let timestamp = String(Int(Date().timeIntervalSince1970).description.suffix(6))
-        let random = String(format: "%04d", Int.random(in: 0...9999))
-        return "\(prefix)-\(timestamp)-\(random)"
+        let prefix = AppSettings.shared.trackingPrefix
+        let randomBytes = UnsafeMutableRawPointer.allocate(byteCount: 4, alignment: 1)
+        defer { randomBytes.deallocate() }
+        _ = SecRandomCopyBytes(kSecRandomDefault, 4, randomBytes)
+        let randomInt = UInt32(bitPattern: Int32(bigEndian: randomBytes.load(as: Int32.self)))
+        let random = String(format: "%08X", randomInt)
+        return "\(prefix)-\(random)"
     }
 
     var statusDisplayName: String {

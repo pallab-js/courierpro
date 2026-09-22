@@ -24,18 +24,13 @@ struct PricingRuleListView: View {
             if viewModel.isLoadingPricingRules {
                 LoadingView()
             } else if viewModel.pricingRules.isEmpty {
-                VStack {
-                    Image(systemName: "dollarsign.circle")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-                    Text("No pricing rules")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                    Text("Create your first pricing rule to get started")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                EmptyStateView(
+                    icon: "dollarsign.circle",
+                    title: "No Pricing Rules",
+                    message: "Create your first pricing rule to get started",
+                    actionTitle: "Create Rule",
+                    action: { showingCreateSheet = true }
+                )
             } else {
                 List {
                     ForEach(viewModel.pricingRules) { rule in
@@ -47,7 +42,7 @@ struct PricingRuleListView: View {
                                 editingRule = rule
                             }
                             Button(rule.isActive ? "Deactivate" : "Activate") {
-                                try? viewModel.updatePricingRule(
+                                viewModel.updatePricingRule(
                                     rule,
                                     name: rule.name,
                                     pricingType: rule.pricingType,
@@ -68,7 +63,7 @@ struct PricingRuleListView: View {
             }
         }
         .task {
-            try? viewModel.loadPricingRules()
+            viewModel.loadPricingRules()
         }
         .sheet(isPresented: $showingCreateSheet) {
             PricingRuleFormView(viewModel: viewModel)
@@ -83,7 +78,7 @@ struct PricingRuleListView: View {
             Button("Cancel", role: .cancel) { deleteConfirmation = nil }
             Button("Delete", role: .destructive) {
                 if let rule = deleteConfirmation {
-                    try? viewModel.deletePricingRule(rule)
+                    viewModel.deletePricingRule(rule)
                     deleteConfirmation = nil
                 }
             }
@@ -136,6 +131,9 @@ struct PricingRuleRow: View {
         .onTapGesture {
             onSelect()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(rule.name), \(rule.pricingType.displayName), \(AppSettings.shared.currencySymbol)\(String(format: "%.2f", rule.basePrice)), \(rule.isActive ? "Active" : "Inactive")")
+        .accessibilityHint("Double tap to edit")
     }
 }
 

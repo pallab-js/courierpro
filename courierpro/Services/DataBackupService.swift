@@ -1,7 +1,10 @@
 import Foundation
 import SwiftData
+import CryptoKit
 
 struct DataBackupService {
+    private static let maxBackupFileSize: Int = 50 * 1024 * 1024 // 50 MB
+
     static func createBackup(context: ModelContext) throws -> URL {
         let timestamp = DateFormatter.backupDateFormatter.string(from: Date())
         let filename = "CourierPro_Backup_\(timestamp)"
@@ -31,23 +34,50 @@ struct DataBackupService {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = .prettyPrinted
-        let data = try encoder.encode(backup)
-        try data.write(to: backupFile, options: [.completeFileProtection])
+        let plaintextData = try encoder.encode(backup)
+
+        let key = SymmetricKey(size: .bits256)
+        let sealedBox = try AES.GCM.seal(plaintextData, using: key)
+        let combinedData = sealedBox.combined!
+
+        try combinedData.write(to: backupFile, options: [.completeFileProtection])
+
+        let keyFile = backupDir.appendingPathComponent("\(filename).key")
+        try key.withUnsafeBytes { keyBytes in
+            let keyData = Data(keyBytes)
+            try keyData.write(to: keyFile, options: [.completeFileProtection])
+        }
 
         return backupFile
     }
 
     static func restoreBackup(from url: URL, context: ModelContext) throws {
         let allowedDirectory = Self.backupDirectory()
-        let standardized = url.standardizedFileURL
+        let resolved = url.resolvingSymlinksInPath()
+        let standardized = resolved.standardizedFileURL
         guard standardized.path.hasPrefix(allowedDirectory.path) else {
             throw BackupError.invalidPath
         }
 
-        let data = try Data(contentsOf: url)
+        let resourceValues = try url.resourceValues(forKeys: [.fileSizeKey])
+        guard let fileSize = resourceValues.fileSize, fileSize <= maxBackupFileSize else {
+            throw BackupError.fileTooLarge
+        }
+
+        let combinedData = try Data(contentsOf: url)
+
+        let keyFile = allowedDirectory.appendingPathComponent(url.deletingPathExtension().lastPathComponent + ".key")
+        guard let keyData = try? Data(contentsOf: keyFile), keyData.count == 32 else {
+            throw BackupError.decryptionFailed
+        }
+        let key = SymmetricKey(data: keyData)
+
+        let sealedBox = try AES.GCM.SealedBox(combined: combinedData)
+        let decryptedData = try AES.GCM.open(sealedBox, using: key)
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        let backup = try decoder.decode(BackupData.self, from: data)
+        let backup = try decoder.decode(BackupData.self, from: decryptedData)
 
         guard backup.customers.count <= 100_000,
               backup.parcels.count <= 500_000,
@@ -141,11 +171,14 @@ struct DataBackupService {
 
     static func deleteBackup(at url: URL) throws {
         let allowedDirectory = Self.backupDirectory()
-        let standardized = url.standardizedFileURL
+        let resolved = url.resolvingSymlinksInPath()
+        let standardized = resolved.standardizedFileURL
         guard standardized.path.hasPrefix(allowedDirectory.path) else {
             throw BackupError.invalidPath
         }
         try FileManager.default.removeItem(at: url)
+        let keyFile = allowedDirectory.appendingPathComponent(url.deletingPathExtension().lastPathComponent + ".key")
+        try? FileManager.default.removeItem(at: keyFile)
     }
 
     private static func backupDirectory() -> URL {
@@ -159,6 +192,8 @@ enum BackupError: LocalizedError {
     case encodingFailed
     case decodingFailed
     case invalidPath
+    case fileTooLarge
+    case decryptionFailed
 
     var errorDescription: String? {
         switch self {
@@ -166,6 +201,8 @@ enum BackupError: LocalizedError {
         case .encodingFailed: return "Failed to encode backup data"
         case .decodingFailed: return "Failed to decode backup data"
         case .invalidPath: return "Invalid backup file path"
+        case .fileTooLarge: return "Backup file is too large (max 50 MB)"
+        case .decryptionFailed: return "Failed to decrypt backup. Missing or invalid encryption key."
         }
     }
 }

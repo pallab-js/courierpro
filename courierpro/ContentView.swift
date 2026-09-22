@@ -9,6 +9,9 @@ struct ContentView: View {
     @State private var importType: ImportType = .customers
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var isProcessing = false
+    @State private var showingSuccess = false
+    @State private var successMessage = ""
 
     enum ImportType {
         case customers
@@ -89,41 +92,82 @@ struct ContentView: View {
         } message: {
             Text(errorMessage)
         }
+        .alert("Success", isPresented: $showingSuccess) {
+            Button("OK") { }
+        } message: {
+            Text(successMessage)
+        }
+        .overlay {
+            if isProcessing {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .controlSize(.large)
+                        Text("Processing...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(24)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(12)
+                }
+            }
+        }
     }
 
     private func exportParcels() {
-        do {
-            let descriptor = FetchDescriptor<Parcel>()
-            let parcels = try modelContext.fetch(descriptor)
-            let csv = CSVExporter.exportParcels(parcels)
-            saveToDownloads(csv, filename: "parcels_export.csv")
-        } catch {
-            errorMessage = "Failed to export parcels: \(error.localizedDescription)"
-            showingError = true
+        isProcessing = true
+        Task {
+            do {
+                let descriptor = FetchDescriptor<Parcel>()
+                let parcels = try modelContext.fetch(descriptor)
+                let csv = CSVExporter.exportParcels(parcels)
+                saveToDownloads(csv, filename: "parcels_export.csv")
+                successMessage = "Parcels exported successfully"
+                showingSuccess = true
+            } catch {
+                errorMessage = "Failed to export parcels: \(error.localizedDescription)"
+                showingError = true
+            }
+            isProcessing = false
         }
     }
 
     private func exportCustomers() {
-        do {
-            let descriptor = FetchDescriptor<Customer>()
-            let customers = try modelContext.fetch(descriptor)
-            let csv = CSVExporter.exportCustomers(customers)
-            saveToDownloads(csv, filename: "customers_export.csv")
-        } catch {
-            errorMessage = "Failed to export customers: \(error.localizedDescription)"
-            showingError = true
+        isProcessing = true
+        Task {
+            do {
+                let descriptor = FetchDescriptor<Customer>()
+                let customers = try modelContext.fetch(descriptor)
+                let csv = CSVExporter.exportCustomers(customers)
+                saveToDownloads(csv, filename: "customers_export.csv")
+                successMessage = "Customers exported successfully"
+                showingSuccess = true
+            } catch {
+                errorMessage = "Failed to export customers: \(error.localizedDescription)"
+                showingError = true
+            }
+            isProcessing = false
         }
     }
 
     private func exportDrivers() {
-        do {
-            let descriptor = FetchDescriptor<Driver>()
-            let drivers = try modelContext.fetch(descriptor)
-            let csv = CSVExporter.exportDrivers(drivers)
-            saveToDownloads(csv, filename: "drivers_export.csv")
-        } catch {
-            errorMessage = "Failed to export drivers: \(error.localizedDescription)"
-            showingError = true
+        isProcessing = true
+        Task {
+            do {
+                let descriptor = FetchDescriptor<Driver>()
+                let drivers = try modelContext.fetch(descriptor)
+                let csv = CSVExporter.exportDrivers(drivers)
+                saveToDownloads(csv, filename: "drivers_export.csv")
+                successMessage = "Drivers exported successfully"
+                showingSuccess = true
+            } catch {
+                errorMessage = "Failed to export drivers: \(error.localizedDescription)"
+                showingError = true
+            }
+            isProcessing = false
         }
     }
 
@@ -144,23 +188,29 @@ struct ContentView: View {
             return
         }
 
-        switch importType {
-        case .customers:
-            let customers = CSVImporter.importCustomers(from: csv)
-            for customer in customers {
-                modelContext.insert(customer)
+        isProcessing = true
+        Task {
+            switch importType {
+            case .customers:
+                let customers = CSVImporter.importCustomers(from: csv)
+                for customer in customers {
+                    modelContext.insert(customer)
+                }
+            case .drivers:
+                let drivers = CSVImporter.importDrivers(from: csv)
+                for driver in drivers {
+                    modelContext.insert(driver)
+                }
             }
-        case .drivers:
-            let drivers = CSVImporter.importDrivers(from: csv)
-            for driver in drivers {
-                modelContext.insert(driver)
+            do {
+                try modelContext.save()
+                successMessage = "Data imported successfully"
+                showingSuccess = true
+            } catch {
+                errorMessage = "Failed to save imported data: \(error.localizedDescription)"
+                showingError = true
             }
-        }
-        do {
-            try modelContext.save()
-        } catch {
-            errorMessage = "Failed to save imported data: \(error.localizedDescription)"
-            showingError = true
+            isProcessing = false
         }
     }
 

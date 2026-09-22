@@ -11,6 +11,11 @@ struct DriverFormView: View {
 
     @State private var showingError = false
     @State private var errorMessage = ""
+    @FocusState private var focusedField: Field?
+
+    private enum Field {
+        case name, phone, licenseNumber
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -24,18 +29,28 @@ struct DriverFormView: View {
                         Text("Name:")
                         TextField("Full name", text: $name)
                             .textFieldStyle(.roundedBorder)
+                            .focused($focusedField, equals: .name)
+                            .onChange(of: name) { _, newValue in
+                                name = String(newValue.prefix(200))
+                            }
                     }
 
                     HStack {
                         Text("Phone:")
                         TextField("9876543210", text: $phone)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: phone) { _, newValue in
+                                phone = String(newValue.prefix(20))
+                            }
                     }
 
                     HStack {
                         Text("License #:")
                         TextField("e.g., DL-MH-001", text: $licenseNumber)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: licenseNumber) { _, newValue in
+                                licenseNumber = String(newValue.prefix(50))
+                            }
                     }
 
                     Toggle("Available for dispatch", isOn: $isAvailable)
@@ -59,6 +74,9 @@ struct DriverFormView: View {
         }
         .padding()
         .frame(width: 420, height: 320)
+        .onAppear {
+            focusedField = .name
+        }
         .alert("Error", isPresented: $showingError) {
             Button("OK") { }
         } message: {

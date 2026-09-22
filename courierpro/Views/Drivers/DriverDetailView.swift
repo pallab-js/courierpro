@@ -118,7 +118,7 @@ struct DriverDetailView: View {
                 ForEach(parcels) { parcel in
                     HStack(spacing: 12) {
                         Image(systemName: parcel.status.systemImage)
-                            .foregroundColor(statusColor(parcel.status))
+                            .foregroundColor(parcel.status.color)
                             .frame(width: 20)
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -141,17 +141,6 @@ struct DriverDetailView: View {
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, minHeight: 60)
             }
-        }
-    }
-
-    private func statusColor(_ status: DeliveryStatus) -> Color {
-        switch status {
-        case .created: return .blue
-        case .pickedUp: return .orange
-        case .inTransit: return .purple
-        case .outForDelivery: return .yellow
-        case .delivered: return .green
-        case .failed: return .red
         }
     }
 }

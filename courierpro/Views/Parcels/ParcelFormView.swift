@@ -17,6 +17,11 @@ struct ParcelFormView: View {
 
     @State private var showingError = false
     @State private var errorMessage = ""
+    @FocusState private var focusedField: Field?
+
+    private enum Field {
+        case weight, dimensions, notes
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -48,12 +53,17 @@ struct ParcelFormView: View {
                         Text("Weight (kg):")
                         TextField("0.0", text: $weight)
                             .textFieldStyle(.roundedBorder)
+                            .focused($focusedField, equals: .weight)
                     }
 
                     HStack {
                         Text("Dimensions:")
                         TextField("e.g., 30x20x15 cm", text: $dimensions)
                             .textFieldStyle(.roundedBorder)
+                            .focused($focusedField, equals: .dimensions)
+                            .onChange(of: dimensions) { _, newValue in
+                                dimensions = String(newValue.prefix(200))
+                            }
                     }
 
                     HStack {
@@ -61,6 +71,9 @@ struct ParcelFormView: View {
                         TextEditor(text: $notes)
                             .frame(height: 80)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: notes) { _, newValue in
+                                notes = String(newValue.prefix(1000))
+                            }
                     }
                 }
             }
@@ -84,6 +97,7 @@ struct ParcelFormView: View {
         .frame(width: 500, height: 450)
         .task {
             await loadCustomers()
+            focusedField = .weight
         }
         .alert("Error", isPresented: $showingError) {
             Button("OK") { }
@@ -94,7 +108,7 @@ struct ParcelFormView: View {
 
     private func loadCustomers() async {
         let customerViewModel = CustomerViewModel()
-        try? customerViewModel.loadCustomers()
+        customerViewModel.loadCustomers()
         availableSenders = customerViewModel.customers
         availableReceivers = customerViewModel.customers
     }

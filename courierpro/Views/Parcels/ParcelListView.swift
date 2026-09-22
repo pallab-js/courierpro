@@ -135,6 +135,9 @@ struct ParcelRow: View {
         .onTapGesture {
             onSelect()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Parcel \(parcel.trackingNumber), Status: \(parcel.status.displayName), Weight: \(String(format: "%.1f kilograms", parcel.weight))")
+        .accessibilityHint("Double tap to view details")
     }
 }
 

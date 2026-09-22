@@ -3,10 +3,18 @@ import SwiftData
 
 @MainActor
 final class PersistenceService {
-    static let shared = PersistenceService()
+    static let shared: PersistenceService = {
+        guard let service = PersistenceService() else {
+            fatalError("Failed to initialize PersistenceService. Database unavailable.")
+        }
+        return service
+    }()
 
     static var inMemory: PersistenceService {
-        PersistenceService(isInMemory: true)!
+        guard let service = PersistenceService(isInMemory: true) else {
+            fatalError("Failed to initialize in-memory PersistenceService.")
+        }
+        return service
     }
 
     let modelContainer: ModelContainer

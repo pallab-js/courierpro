@@ -78,6 +78,7 @@ struct ReportsView: View {
             }
         }
         .task {
+            isLoading = true
             parcelViewModel.loadParcels()
             customerViewModel.loadCustomers()
             driverViewModel.loadDrivers()

@@ -53,14 +53,14 @@ struct PricingRuleEditView: View {
 
                 Section("Pricing") {
                     HStack {
-                        Text("Base Price ($):")
+                        Text("Base Price (\(AppSettings.shared.currencySymbol)):")
                         TextField("10", text: $basePrice)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     if selectedType != .flatRate {
                         HStack {
-                            Text("Price per \(selectedType == .perKg ? "kg" : "km") ($):")
+                            Text("Price per \(selectedType == .perKg ? "kg" : "km") (\(AppSettings.shared.currencySymbol)):")
                             TextField("2", text: $pricePerUnit)
                                 .textFieldStyle(.roundedBorder)
                         }
@@ -112,21 +112,22 @@ struct PricingRuleEditView: View {
             return
         }
 
-        do {
-            try viewModel.updatePricingRule(
-                rule,
-                name: name,
-                pricingType: selectedType,
-                basePrice: Double(basePrice) ?? 0,
-                pricePerUnit: Double(pricePerUnit) ?? 0,
-                minimumWeight: Double(minimumWeight) ?? 0,
-                maximumWeight: Double(maximumWeight) ?? 100,
-                isActive: isActive
-            )
-            dismiss()
-        } catch {
-            errorMessage = "Failed to save changes: \(error.localizedDescription)"
+        viewModel.updatePricingRule(
+            rule,
+            name: name,
+            pricingType: selectedType,
+            basePrice: Double(basePrice) ?? 0,
+            pricePerUnit: Double(pricePerUnit) ?? 0,
+            minimumWeight: Double(minimumWeight) ?? 0,
+            maximumWeight: Double(maximumWeight) ?? 100,
+            isActive: isActive
+        )
+
+        if viewModel.showError {
+            errorMessage = viewModel.errorMessage ?? "Failed to save changes"
             showingError = true
+        } else {
+            dismiss()
         }
     }
 }

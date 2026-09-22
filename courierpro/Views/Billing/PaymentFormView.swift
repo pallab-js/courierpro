@@ -50,6 +50,9 @@ struct PaymentFormView: View {
                         Text("Reference:")
                         TextField("Optional reference number", text: $reference)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: reference) { _, newValue in
+                                reference = String(newValue.prefix(200))
+                            }
                     }
 
                     HStack {
@@ -57,6 +60,9 @@ struct PaymentFormView: View {
                         TextEditor(text: $notes)
                             .frame(height: 60)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: notes) { _, newValue in
+                                notes = String(newValue.prefix(500))
+                            }
                     }
                 }
             }
@@ -98,17 +104,18 @@ struct PaymentFormView: View {
             return
         }
 
-        do {
-            try viewModel.addPayment(
-                to: invoice,
-                amount: amountValue,
-                method: selectedMethod,
-                reference: reference.isEmpty ? nil : reference.trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-            dismiss()
-        } catch {
-            errorMessage = "Failed to record payment"
+        viewModel.addPayment(
+            to: invoice,
+            amount: amountValue,
+            method: selectedMethod,
+            reference: reference.isEmpty ? nil : reference.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+
+        if viewModel.showError {
+            errorMessage = viewModel.errorMessage ?? "Failed to record payment"
             showingError = true
+        } else {
+            dismiss()
         }
     }
 }

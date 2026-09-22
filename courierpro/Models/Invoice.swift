@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import SwiftUI
+import CryptoKit
 
 enum InvoiceStatus: Int, Codable, CaseIterable, Identifiable {
     case draft = 0
@@ -85,8 +86,8 @@ final class Invoice {
         self.statusRaw = status.rawValue
         self.subtotal = subtotal
         self.taxRate = max(0, min(taxRate, 100))
-        self.taxAmount = subtotal * max(0, min(taxRate, 100)) / 100
-        self.totalAmount = subtotal + (subtotal * max(0, min(taxRate, 100)) / 100)
+        self.taxAmount = 0
+        self.totalAmount = 0
         self.notes = notes
         self.dueDate = dueDate
         self.customer = customer
@@ -96,9 +97,12 @@ final class Invoice {
 
     static func generateInvoiceNumber() -> String {
         let prefix = "INV"
-        let timestamp = String(Int(Date().timeIntervalSince1970).description.suffix(6))
-        let random = String(format: "%04d", Int.random(in: 0...9999))
-        return "\(prefix)-\(timestamp)-\(random)"
+        let randomBytes = UnsafeMutableRawPointer.allocate(byteCount: 4, alignment: 1)
+        defer { randomBytes.deallocate() }
+        _ = SecRandomCopyBytes(kSecRandomDefault, 4, randomBytes)
+        let randomInt = UInt32(bitPattern: Int32(bigEndian: randomBytes.load(as: Int32.self)))
+        let random = String(format: "%08X", randomInt)
+        return "\(prefix)-\(random)"
     }
 
     func recalculateTotals() {

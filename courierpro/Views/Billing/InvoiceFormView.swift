@@ -83,6 +83,9 @@ struct InvoiceFormView: View {
                         TextEditor(text: $notes)
                             .frame(height: 60)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: notes) { _, newValue in
+                                notes = String(newValue.prefix(500))
+                            }
                     }
                 }
             }
@@ -125,7 +128,7 @@ struct InvoiceFormView: View {
         let itemDescriptor = FetchDescriptor<InvoiceItem>()
         let existingItems: [InvoiceItem]
         do {
-            existingItems = try PersistenceService.shared!.fetch(itemDescriptor)
+            existingItems = try PersistenceService.shared.fetch(itemDescriptor)
         } catch {
             existingItems = []
         }
@@ -150,18 +153,19 @@ struct InvoiceFormView: View {
             return
         }
 
-        do {
-            try viewModel.createInvoice(
-                customer: customer,
-                parcels: Array(selectedParcels),
-                taxRate: taxRateValue,
-                notes: notes.isEmpty ? nil : notes,
-                dueDate: dueDate
-            )
-            dismiss()
-        } catch {
-            errorMessage = "Failed to create invoice"
+        viewModel.createInvoice(
+            customer: customer,
+            parcels: Array(selectedParcels),
+            taxRate: taxRateValue,
+            notes: notes.isEmpty ? nil : notes,
+            dueDate: dueDate
+        )
+
+        if viewModel.showError {
+            errorMessage = viewModel.errorMessage ?? "Failed to create invoice"
             showingError = true
+        } else {
+            dismiss()
         }
     }
 }

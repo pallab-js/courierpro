@@ -137,6 +137,7 @@ struct DriverRow: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(driver.name), License \(driver.licenseNumber), \(!driver.isAvailable ? "Unavailable" : (driver.isBusy ? "Busy" : "Available"))")
+        .accessibilityHint("Double tap to view details")
     }
 }
 

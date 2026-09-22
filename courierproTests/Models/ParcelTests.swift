@@ -29,8 +29,9 @@ final class ParcelTests: XCTestCase {
         let parcel = Parcel()
         let components = parcel.trackingNumber.split(separator: "-")
 
-        XCTAssertEqual(components.count, 3)
+        XCTAssertEqual(components.count, 2)
         XCTAssertEqual(components[0], "CP")
+        XCTAssertEqual(components[1].count, 8)
     }
 
     func testStatusDisplayName() {

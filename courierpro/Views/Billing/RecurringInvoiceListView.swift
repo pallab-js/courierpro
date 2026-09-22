@@ -115,6 +115,9 @@ struct RecurringInvoiceRow: View {
         .onTapGesture {
             onSelect()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(recurring.name), Customer: \(recurring.customer?.name ?? "Unknown"), Amount: \(AppSettings.shared.currencySymbol)\(String(format: "%.2f", recurring.amount)), \(recurring.frequency.displayName), \(recurring.isActive ? "Active" : "Paused")")
+        .accessibilityHint("Double tap to view details")
     }
 }
 

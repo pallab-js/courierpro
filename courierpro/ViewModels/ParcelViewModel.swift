@@ -19,7 +19,7 @@ final class ParcelViewModel: ObservableObject {
     private(set) var deliveredCount: Int = 0
 
     init(persistenceService: PersistenceService? = nil) {
-        self.persistenceService = persistenceService ?? PersistenceService.shared!
+        self.persistenceService = persistenceService ?? PersistenceService.shared
     }
 
     var filteredParcels: [Parcel] {
@@ -97,7 +97,7 @@ final class ParcelViewModel: ObservableObject {
         }
     }
 
-    func updateParcelStatus(_ parcel: Parcel, status: DeliveryStatus) {
+    func updateParcelStatus(_ parcel: Parcel, status: DeliveryStatus, notes: String? = nil, updatedBy: String? = nil) {
         do {
             let allowedTransitions: [DeliveryStatus: Set<DeliveryStatus>] = [
                 .created: [.pickedUp],
@@ -122,8 +122,8 @@ final class ParcelViewModel: ObservableObject {
             let history = StatusHistory(
                 status: status,
                 timestamp: Date(),
-                notes: "Status updated to \(status.displayName)",
-                updatedBy: "System",
+                notes: notes ?? "Status updated to \(status.displayName)",
+                updatedBy: updatedBy ?? "System",
                 parcel: parcel
             )
             persistenceService.insert(history)

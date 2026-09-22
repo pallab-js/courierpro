@@ -13,7 +13,7 @@ final class CustomerViewModel: ObservableObject {
     @Published var showError = false
 
     init(persistenceService: PersistenceService? = nil) {
-        self.persistenceService = persistenceService ?? PersistenceService.shared!
+        self.persistenceService = persistenceService ?? PersistenceService.shared
     }
 
     var filteredCustomers: [Customer] {

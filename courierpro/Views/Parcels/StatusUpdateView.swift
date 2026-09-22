@@ -48,6 +48,9 @@ struct StatusUpdateView: View {
                         Text("Updated By:")
                         TextField("Your name", text: $updatedBy)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: updatedBy) { _, newValue in
+                                updatedBy = String(newValue.prefix(100))
+                            }
                     }
 
                     HStack {
@@ -55,6 +58,9 @@ struct StatusUpdateView: View {
                         TextEditor(text: $notes)
                             .frame(height: 80)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: notes) { _, newValue in
+                                notes = String(newValue.prefix(1000))
+                            }
                     }
                 }
             }
@@ -90,21 +96,13 @@ struct StatusUpdateView: View {
             return
         }
 
-        let history = StatusHistory(
+        viewModel.updateParcelStatus(
+            parcel,
             status: selectedStatus,
             notes: notes.isEmpty ? nil : notes,
-            updatedBy: updatedBy.isEmpty ? nil : updatedBy,
-            parcel: parcel
+            updatedBy: updatedBy.isEmpty ? nil : updatedBy
         )
-        viewModel.persistenceService.insert(history)
-
-        do {
-            try viewModel.updateParcelStatus(parcel, status: selectedStatus)
-            dismiss()
-        } catch {
-            errorMessage = "Failed to update status: \(error.localizedDescription)"
-            showingError = true
-        }
+        dismiss()
     }
 }
 

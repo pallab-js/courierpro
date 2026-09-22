@@ -129,7 +129,7 @@ struct ParcelEditView: View {
     private func loadDrivers() async {
         let descriptor = FetchDescriptor<Driver>()
         do {
-            availableDrivers = try PersistenceService.shared!.fetch(descriptor)
+            availableDrivers = try PersistenceService.shared.fetch(descriptor)
         } catch {
             errorMessage = "Failed to load drivers"
             showingError = true
@@ -163,7 +163,7 @@ struct ParcelEditView: View {
         parcel.updatedAt = Date()
 
         do {
-            try PersistenceService.shared!.save()
+            try PersistenceService.shared.save()
             viewModel.loadParcels()
             dismiss()
         } catch {

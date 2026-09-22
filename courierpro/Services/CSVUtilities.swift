@@ -3,12 +3,15 @@ import Foundation
 enum CSVUtilities {
     static func escapeCSV(_ value: String) -> String {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        let formulaPrefixes: [Character] = ["=", "+", "-", "@", "\t", "\r"]
+        let cleaned = trimmed.filter { char in
+            char == "\t" || char == "\n" || char == "\r" || (char.asciiValue.map { $0 >= 0x20 } ?? false)
+        }
+        let formulaPrefixes: [Character] = ["=", "+", "-", "@", "\t", "\r", "|"]
         let escaped: String
-        if let first = trimmed.first, formulaPrefixes.contains(first) {
-            escaped = "'" + trimmed
+        if let first = cleaned.first, formulaPrefixes.contains(first) {
+            escaped = "'" + cleaned
         } else {
-            escaped = trimmed
+            escaped = cleaned
         }
         if escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n") {
             return "\"\(escaped.replacingOccurrences(of: "\"", with: "\"\""))\""

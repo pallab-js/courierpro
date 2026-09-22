@@ -13,6 +13,11 @@ struct CustomerFormView: View {
 
     @State private var showingError = false
     @State private var errorMessage = ""
+    @FocusState private var focusedField: Field?
+
+    private enum Field {
+        case name, email, phone, address, city, postalCode
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -26,18 +31,28 @@ struct CustomerFormView: View {
                         Text("Name:")
                         TextField("Company or person name", text: $name)
                             .textFieldStyle(.roundedBorder)
+                            .focused($focusedField, equals: .name)
+                            .onChange(of: name) { _, newValue in
+                                name = String(newValue.prefix(200))
+                            }
                     }
 
                     HStack {
                         Text("Email:")
                         TextField("info@company.in", text: $email)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: email) { _, newValue in
+                                email = String(newValue.prefix(200))
+                            }
                     }
 
                     HStack {
                         Text("Phone:")
                         TextField("9876543210", text: $phone)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: phone) { _, newValue in
+                                phone = String(newValue.prefix(20))
+                            }
                     }
                 }
 
@@ -46,18 +61,27 @@ struct CustomerFormView: View {
                         Text("Address:")
                         TextField("Street address, locality", text: $address)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: address) { _, newValue in
+                                address = String(newValue.prefix(500))
+                            }
                     }
 
                     HStack {
                         Text("City:")
                         TextField("e.g., Mumbai, Delhi, Bangalore", text: $city)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: city) { _, newValue in
+                                city = String(newValue.prefix(100))
+                            }
                     }
 
                     HStack {
                         Text("Postal Code:")
                         TextField("6-digit PIN code", text: $postalCode)
                             .textFieldStyle(.roundedBorder)
+                            .onChange(of: postalCode) { _, newValue in
+                                postalCode = String(newValue.prefix(10))
+                            }
                     }
                 }
             }
@@ -79,6 +103,9 @@ struct CustomerFormView: View {
         }
         .padding()
         .frame(width: 450, height: 400)
+        .onAppear {
+            focusedField = .name
+        }
         .alert("Error", isPresented: $showingError) {
             Button("OK") { }
         } message: {

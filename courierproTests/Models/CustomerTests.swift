@@ -20,9 +20,9 @@ final class CustomerTests: XCTestCase {
         XCTAssertEqual(customer.postalCode, "400021")
     }
 
-    func testCustomerFullName() {
+    func testCustomerName() {
         let customer = Customer(name: "Tata Consultancy Services")
-        XCTAssertEqual(customer.fullName, "Tata Consultancy Services")
+        XCTAssertEqual(customer.name, "Tata Consultancy Services")
     }
 
     func testCustomerShortAddress() {

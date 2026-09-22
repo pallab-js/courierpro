@@ -18,7 +18,7 @@ final class DriverViewModel: ObservableObject {
     private(set) var busyDrivers: [Driver] = []
 
     init(persistenceService: PersistenceService? = nil) {
-        self.persistenceService = persistenceService ?? PersistenceService.shared!
+        self.persistenceService = persistenceService ?? PersistenceService.shared
     }
 
     var filteredDrivers: [Driver] {
@@ -105,6 +105,14 @@ final class DriverViewModel: ObservableObject {
 
     func deleteDriver(_ driver: Driver) {
         do {
+            let allParcels = try persistenceService.fetch(FetchDescriptor<Parcel>())
+            let linkedParcels = allParcels.filter { $0.driver?.id == driver.id }
+            if !linkedParcels.isEmpty {
+                errorMessage = "Cannot delete driver with assigned parcels. Unassign them first."
+                showError = true
+                return
+            }
+
             persistenceService.delete(driver)
             try persistenceService.save()
             loadDrivers()

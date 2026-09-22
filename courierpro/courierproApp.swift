@@ -13,11 +13,7 @@ struct courierproApp: App {
     @State private var databaseError: Bool
 
     init() {
-        if let service = PersistenceService.shared {
-            _databaseError = State(initialValue: false)
-        } else {
-            _databaseError = State(initialValue: true)
-        }
+        _databaseError = State(initialValue: false)
     }
 
     var body: some Scene {
@@ -39,11 +35,9 @@ struct courierproApp: App {
             } else {
                 ContentView()
                     .task {
-                        if let context = PersistenceService.shared?.modelContext {
-                            try? DataSeeder.shared.seedSampleData(into: context)
-                        }
+                        try? DataSeeder.shared.seedSampleData(into: PersistenceService.shared.modelContext)
                     }
-                    .modelContainer(PersistenceService.shared!.modelContainer)
+                    .modelContainer(PersistenceService.shared.modelContainer)
             }
         }
         .commands {

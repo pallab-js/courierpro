@@ -25,7 +25,7 @@ struct InvoiceDetailView: View {
             ToolbarItemGroup {
                 if invoice.status == .draft {
                     Button(action: {
-                        try? viewModel.updateInvoiceStatus(invoice, status: .pending)
+                        viewModel.updateInvoiceStatus(invoice, status: .pending)
                     }) {
                         Label("Send", systemImage: "paperplane")
                     }

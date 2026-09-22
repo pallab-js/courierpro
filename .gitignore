@@ -55,3 +55,12 @@ courierpro.xcodeproj/project.xcworkspace/xcuserdata/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Secrets and sensitive config
+.env
+.env.*
+*.p12
+*.mobileprovision
+Secrets.swift
+GoogleService-Info.plist
+*.xcconfig

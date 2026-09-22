@@ -39,18 +39,15 @@ struct InvoiceListView: View {
             if viewModel.isLoadingInvoices {
                 LoadingView()
             } else if viewModel.filteredInvoices.isEmpty {
-                VStack {
-                    Image(systemName: "doc.text")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-                    Text("No invoices found")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                    Text("Create your first invoice to get started")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                EmptyStateView(
+                    icon: "doc.text",
+                    title: "No Invoices Found",
+                    message: viewModel.invoices.isEmpty
+                        ? "Create your first invoice to get started"
+                        : "Try adjusting your search or filter criteria",
+                    actionTitle: viewModel.invoices.isEmpty ? "Create Invoice" : nil,
+                    action: viewModel.invoices.isEmpty ? { showingCreateSheet = true } : nil
+                )
             } else {
                 List {
                     ForEach(viewModel.filteredInvoices) { invoice in
@@ -63,12 +60,12 @@ struct InvoiceListView: View {
                             }
                             if invoice.status == .draft {
                                 Button("Send Invoice") {
-                                    try? viewModel.updateInvoiceStatus(invoice, status: .pending)
+                                    viewModel.updateInvoiceStatus(invoice, status: .pending)
                                 }
                             }
                             if invoice.status == .pending {
                                 Button("Mark as Paid") {
-                                    try? viewModel.updateInvoiceStatus(invoice, status: .paid)
+                                    viewModel.updateInvoiceStatus(invoice, status: .paid)
                                 }
                             }
                             Divider()
@@ -81,7 +78,7 @@ struct InvoiceListView: View {
             }
         }
         .task {
-            try? viewModel.loadInvoices()
+            viewModel.loadInvoices()
         }
         .sheet(isPresented: $showingCreateSheet) {
             InvoiceFormView(viewModel: viewModel)
@@ -96,7 +93,7 @@ struct InvoiceListView: View {
             Button("Cancel", role: .cancel) { deleteConfirmation = nil }
             Button("Delete", role: .destructive) {
                 if let invoice = deleteConfirmation {
-                    try? viewModel.deleteInvoice(invoice)
+                    viewModel.deleteInvoice(invoice)
                     deleteConfirmation = nil
                 }
             }
@@ -115,7 +112,7 @@ struct InvoiceRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: invoice.status.systemImage)
-                .foregroundColor(statusColor(invoice.status))
+                .foregroundColor(invoice.status.color)
                 .frame(width: 20)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -135,7 +132,7 @@ struct InvoiceRow: View {
                     .fontWeight(.medium)
                 Text(invoice.status.displayName)
                     .font(.caption)
-                    .foregroundColor(statusColor(invoice.status))
+                    .foregroundColor(invoice.status.color)
             }
 
             VStack(alignment: .trailing, spacing: 2) {
@@ -150,20 +147,13 @@ struct InvoiceRow: View {
             }
         }
         .padding(.vertical, 4)
-.contentShape(Rectangle())
+        .contentShape(Rectangle())
         .onTapGesture {
             onSelect()
         }
-    }
-
-    private func statusColor(_ status: InvoiceStatus) -> Color {
-        switch status {
-        case .draft: return .gray
-        case .pending: return .orange
-        case .paid: return .green
-        case .overdue: return .red
-        case .cancelled: return .gray
-        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Invoice \(invoice.invoiceNumber), Status: \(invoice.status.displayName), Amount: \(AppSettings.shared.currencySymbol)\(String(format: "%.2f", invoice.totalAmount))")
+        .accessibilityHint("Double tap to view details")
     }
 }
 

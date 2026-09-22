@@ -12,7 +12,7 @@ final class RecurringInvoiceViewModel: ObservableObject {
     @Published var showError = false
 
     init(persistenceService: PersistenceService? = nil) {
-        self.persistenceService = persistenceService ?? PersistenceService.shared!
+        self.persistenceService = persistenceService ?? PersistenceService.shared
     }
 
     func loadRecurringInvoices() {

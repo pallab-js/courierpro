@@ -37,14 +37,14 @@ struct PricingRuleFormView: View {
 
                 Section("Pricing") {
                     HStack {
-                        Text("Base Price ($):")
+                        Text("Base Price (\(AppSettings.shared.currencySymbol)):")
                         TextField("10", text: $basePrice)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     if selectedType != .flatRate {
                         HStack {
-                            Text("Price per \(selectedType == .perKg ? "kg" : "km") ($):")
+                            Text("Price per \(selectedType == .perKg ? "kg" : "km") (\(AppSettings.shared.currencySymbol)):")
                             TextField("2", text: $pricePerUnit)
                                 .textFieldStyle(.roundedBorder)
                         }
@@ -96,19 +96,20 @@ struct PricingRuleFormView: View {
             return
         }
 
-        do {
-            try viewModel.createPricingRule(
-                name: name,
-                pricingType: selectedType,
-                basePrice: Double(basePrice) ?? 0,
-                pricePerUnit: Double(pricePerUnit) ?? 0,
-                minimumWeight: Double(minimumWeight) ?? 0,
-                maximumWeight: Double(maximumWeight) ?? 100
-            )
-            dismiss()
-        } catch {
-            errorMessage = "Failed to add rule: \(error.localizedDescription)"
+        viewModel.createPricingRule(
+            name: name,
+            pricingType: selectedType,
+            basePrice: Double(basePrice) ?? 0,
+            pricePerUnit: Double(pricePerUnit) ?? 0,
+            minimumWeight: Double(minimumWeight) ?? 0,
+            maximumWeight: Double(maximumWeight) ?? 100
+        )
+
+        if viewModel.showError {
+            errorMessage = viewModel.errorMessage ?? "Failed to add rule"
             showingError = true
+        } else {
+            dismiss()
         }
     }
 }

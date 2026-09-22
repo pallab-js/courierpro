@@ -48,10 +48,6 @@ final class Customer {
         self.updatedAt = updatedAt
     }
 
-    var fullName: String {
-        name
-    }
-
     var shortAddress: String {
         if city.isEmpty && postalCode.isEmpty {
             return address

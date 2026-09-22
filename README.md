@@ -7,14 +7,15 @@ A macOS desktop application for courier and logistics management, built with Swi
 ![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-purple)
 ![Tests](https://img.shields.io/badge/tests-80%20passing-brightgreen)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-success)
+![Security](https://img.shields.io/badge/security-AES--256%20encrypted-brightgreen)
 
 ## Features
 
 ### Core Functionality
-- **Parcel Management** - Create, track, and manage parcels with unique tracking numbers
+- **Parcel Management** - Create, track, and manage parcels with cryptographically secure tracking numbers
 - **Status Tracking** - Full lifecycle: Created → Picked Up → In Transit → Out for Delivery → Delivered / Failed
 - **Customer Management** - Maintain customer database with contact info, addresses, and coordinates
-- **Driver Management** - Manage drivers, availability tracking, and parcel assignments
+- **Driver Management** - Manage drivers, availability tracking, and parcel assignments with deletion safeguards
 
 ### Billing & Invoicing
 - **Invoice Generation** - Auto-create invoices from delivered parcels with line items
@@ -37,16 +38,25 @@ A macOS desktop application for courier and logistics management, built with Swi
 - **Availability Tracking** - Real-time driver availability and busy status
 
 ### Data Management
-- **CSV Import/Export** - Import and export customers, drivers, and parcels
-- **Backup & Restore** - Full JSON backup and restore with relationship mapping
+- **CSV Import/Export** - Import and export customers, drivers, and parcels with loading indicators
+- **Backup & Restore** - Encrypted JSON backup (AES-256-GCM) with relationship mapping
 - **Delivery Map** - Interactive MapKit-based delivery visualization
 
 ### Polish & UX
-- **Empty States** - Helpful empty state views with action buttons
-- **Loading Indicators** - Loading spinners for all data operations
-- **Error Handling** - Graceful error alerts with user-facing messages throughout
+- **Empty States** - Consistent `EmptyStateView` component across all list views with action buttons
+- **Loading Indicators** - Loading spinners for all data operations including import/export
+- **Focus Management** - Auto-focus on first field when forms open
+- **Accessibility** - VoiceOver labels and hints on all interactive rows
 - **Keyboard Shortcuts** - Cmd+1/2/3 for quick navigation
-- **CSV Formula Injection Protection** - Sanitizes exported CSV data
+- **CSV Formula Injection Protection** - Sanitizes exported CSV data (including control characters and pipe injection)
+- **Input Length Limits** - Consistent field length validation on all create/edit forms
+
+### Security
+- **Encrypted Backups** - AES-256-GCM encryption for backup files with per-backup key storage
+- **Secure Tracking Numbers** - Cryptographically random IDs via `SecRandomCopyBytes` (not predictable timestamp-based)
+- **Path Traversal Protection** - Symlink-aware path validation for backup restore
+- **File Size Limits** - 50MB backup size limit, 10MB CSV import limit
+- **Control Character Sanitization** - Strips dangerous characters from CSV exports
 
 ## Requirements
 
@@ -92,6 +102,7 @@ courierpro/
 │   ├── ParcelViewModel.swift
 │   ├── CustomerViewModel.swift
 │   ├── DriverViewModel.swift
+│   ├── DriverScheduleViewModel.swift
 │   ├── InvoiceViewModel.swift
 │   ├── RecurringInvoiceViewModel.swift
 │   └── SettingsViewModel.swift
@@ -126,6 +137,7 @@ courierpro/
 - **UI Framework**: SwiftUI
 - **Data Persistence**: SwiftData (local SQLite via ORM)
 - **Architecture Pattern**: MVVM (Model-View-ViewModel)
+- **Security**: CryptoKit (AES-256-GCM encryption, SecRandomCopyBytes)
 - **Testing**: XCTest (80 unit tests)
 - **Linting**: SwiftLint with 36 opt-in rules
 - **CI/CD**: GitHub Actions (build, test, lint)
@@ -141,6 +153,7 @@ The test suite covers:
 - ViewModel CRUD operations and business logic
 - Service layer: persistence, CSV parsing, route optimization
 - Edge cases: CSV injection, CRLF parsing, distance-based pricing
+- Tracking number format and uniqueness
 
 ## CI/CD
 
