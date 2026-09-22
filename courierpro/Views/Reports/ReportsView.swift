@@ -219,12 +219,9 @@ struct OverviewReportView: View {
                     .padding(.top)
 
                 LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
+                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.flexible(), spacing: 12)
                 ], spacing: 12) {
                     ForEach(DeliveryStatus.allCases) { status in
                         StatusCountCard(
@@ -452,6 +449,7 @@ struct ReportCard: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(10)
@@ -465,18 +463,21 @@ struct StatusCountCard: View {
     let count: Int
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             Image(systemName: status.systemImage)
                 .foregroundColor(status.color)
                 .font(.title2)
             Text("\(count)")
-                .font(.title3)
+                .font(.title)
                 .fontWeight(.bold)
             Text(status.displayName)
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundColor(.secondary)
+                .lineLimit(1)
         }
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 12)
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(10)
         .accessibilityElement(children: .combine)
