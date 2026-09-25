@@ -5,6 +5,7 @@ struct CustomerListView: View {
     @State private var showingCreateSheet = false
     @State private var selectedCustomer: Customer?
     @State private var deleteConfirmation: Customer?
+    @State private var selection = Set<Customer.ID>()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -42,7 +43,10 @@ struct CustomerListView: View {
                     action: viewModel.customers.isEmpty ? { showingCreateSheet = true } : nil
                 )
             } else {
-                Table(viewModel.filteredCustomers) {
+                // The Table needs a real selection binding: without one,
+                // .contextMenu(forSelectionType:) never activates and Edit/Delete
+                // become unreachable from the UI.
+                Table(viewModel.filteredCustomers, selection: $selection) {
                     TableColumn("Name") { customer in
                         Text(customer.name)
                             .fontWeight(.medium)
@@ -69,8 +73,8 @@ struct CustomerListView: View {
                     }
                     .width(min: 100)
                 }
-                .contextMenu(forSelectionType: Customer.self) { selection in
-                    if let customer = selection.first {
+                .contextMenu(forSelectionType: Customer.ID.self) { selectedIDs in
+                    if let customer = customer(withID: selectedIDs.first) {
                         Button("Edit") {
                             selectedCustomer = customer
                         }
@@ -78,6 +82,10 @@ struct CustomerListView: View {
                         Button("Delete", role: .destructive) {
                             deleteConfirmation = customer
                         }
+                    }
+                } primaryAction: { selectedIDs in
+                    if let customer = customer(withID: selectedIDs.first) {
+                        selectedCustomer = customer
                     }
                 }
             }
@@ -108,6 +116,11 @@ struct CustomerListView: View {
                 Text("Are you sure you want to delete customer \(customer.name)? This action cannot be undone.")
             }
         }
+    }
+
+    private func customer(withID id: Customer.ID?) -> Customer? {
+        guard let id else { return nil }
+        return viewModel.customers.first { $0.id == id }
     }
 }
 

@@ -105,6 +105,8 @@ final class DriverViewModel: ObservableObject {
 
     func deleteDriver(_ driver: Driver) {
         do {
+            errorMessage = nil
+            showError = false
             let allParcels = try persistenceService.fetch(FetchDescriptor<Parcel>())
             let linkedParcels = allParcels.filter { $0.driver?.id == driver.id }
             if !linkedParcels.isEmpty {

@@ -121,12 +121,33 @@ final class CustomerViewModel: ObservableObject {
 
     func deleteCustomer(_ customer: Customer) {
         do {
+            errorMessage = nil
+            showError = false
             let allParcels = try persistenceService.fetch(FetchDescriptor<Parcel>())
             let linkedParcels = allParcels.filter { parcel in
                 parcel.sender?.id == customer.id || parcel.receiver?.id == customer.id
             }
             if !linkedParcels.isEmpty {
                 errorMessage = "Cannot delete customer with linked parcels"
+                showError = true
+                return
+            }
+
+            // Invoice.customer and RecurringInvoice.customer have no inverse relationship on
+            // Customer, so SwiftData leaves a dangling reference (and traps on access) if we
+            // delete a customer that either of them points at.
+            let linkedInvoices = try persistenceService.fetch(FetchDescriptor<Invoice>())
+                .filter { $0.customer?.id == customer.id }
+            if !linkedInvoices.isEmpty {
+                errorMessage = "Cannot delete customer with linked invoices"
+                showError = true
+                return
+            }
+
+            let linkedRecurring = try persistenceService.fetch(FetchDescriptor<RecurringInvoice>())
+                .filter { $0.customer?.id == customer.id }
+            if !linkedRecurring.isEmpty {
+                errorMessage = "Cannot delete customer with linked recurring invoices"
                 showError = true
                 return
             }

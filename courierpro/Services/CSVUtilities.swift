@@ -3,8 +3,12 @@ import Foundation
 enum CSVUtilities {
     static func escapeCSV(_ value: String) -> String {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Strip C0 control characters only. `asciiValue` is nil for everything outside
+        // ASCII, so non-ASCII text (accented letters, ₹, CJK) must be kept as-is.
         let cleaned = trimmed.filter { char in
-            char == "\t" || char == "\n" || char == "\r" || (char.asciiValue.map { $0 >= 0x20 } ?? false)
+            if char == "\t" || char == "\n" || char == "\r" { return true }
+            guard let ascii = char.asciiValue else { return true }
+            return ascii >= 0x20 && ascii != 0x7F
         }
         let formulaPrefixes: [Character] = ["=", "+", "-", "@", "\t", "\r", "|"]
         let escaped: String

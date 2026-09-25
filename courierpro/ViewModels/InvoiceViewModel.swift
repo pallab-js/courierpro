@@ -68,7 +68,20 @@ final class InvoiceViewModel: ObservableObject {
         defer { isLoadingInvoices = false }
         do {
             let descriptor = FetchDescriptor<Invoice>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
-            invoices = try persistenceService.fetch(descriptor)
+            let loaded = try persistenceService.fetch(descriptor)
+
+            // Nothing in the app assigns .overdue directly, so derive it from the due date
+            // at load time. Otherwise overdue money is invisible and the dashboard's
+            // overdue card, alerts and status filter can never fire.
+            let now = Date()
+            let newlyOverdue = loaded.filter {
+                $0.status == .pending && $0.dueDate < now && $0.balanceDue > 0
+            }
+            newlyOverdue.forEach { $0.status = .overdue }
+            invoices = loaded
+            if !newlyOverdue.isEmpty {
+                try persistenceService.save()
+            }
         } catch {
             errorMessage = "Failed to load invoices"
             showError = true
@@ -85,6 +98,25 @@ final class InvoiceViewModel: ObservableObject {
             errorMessage = "Failed to load pricing rules"
             showError = true
         }
+    }
+
+    /// Everything the create-invoice form needs. Loading pricing rules here is what lets
+    /// the form show real rule-based prices instead of the hard-coded fallback.
+    func loadInvoiceFormData() -> InvoiceFormData {
+        loadPricingRules()
+
+        let customers = (try? persistenceService.fetch(
+            FetchDescriptor<Customer>(sortBy: [SortDescriptor(\.name)])
+        )) ?? []
+
+        let parcels = (try? persistenceService.fetch(FetchDescriptor<Parcel>())) ?? []
+        let items = (try? persistenceService.fetch(FetchDescriptor<InvoiceItem>())) ?? []
+        let invoicedParcelIds = Set(items.compactMap { $0.parcel?.id })
+        let availableParcels = parcels.filter {
+            $0.status == .delivered && !invoicedParcelIds.contains($0.id)
+        }
+
+        return InvoiceFormData(customers: customers, parcels: availableParcels)
     }
 
     func createInvoice(
@@ -176,6 +208,8 @@ final class InvoiceViewModel: ObservableObject {
 
     func deleteInvoice(_ invoice: Invoice) {
         do {
+            errorMessage = nil
+            showError = false
             persistenceService.delete(invoice)
             try persistenceService.save()
             loadInvoices()
@@ -271,4 +305,9 @@ final class InvoiceViewModel: ObservableObject {
             showError = true
         }
     }
+}
+
+struct InvoiceFormData {
+    let customers: [Customer]
+    let parcels: [Parcel]
 }

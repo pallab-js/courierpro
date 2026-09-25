@@ -59,6 +59,8 @@ enum DeliveryStatus: Int, Codable, CaseIterable, Identifiable {
     func isCompletedOrSucceeded(by currentStatus: DeliveryStatus) -> Bool {
         if currentStatus == self { return true }
         if currentStatus == .failed { return false }
-        return currentStatus.orderedSuccessors.contains(self)
+        // True when the current status is one of the steps that follow this one,
+        // i.e. this step was reached before the parcel got to where it is now.
+        return orderedSuccessors.contains(currentStatus)
     }
 }

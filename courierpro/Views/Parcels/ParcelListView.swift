@@ -84,7 +84,7 @@ struct ParcelListView: View {
             ParcelFormView(viewModel: viewModel)
         }
         .sheet(item: $viewingParcel) { parcel in
-            ParcelDetailView(parcel: parcel)
+            ParcelDetailView(parcel: parcel, onDeleted: { viewModel.loadParcels() })
         }
         .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
         .alert("Delete Parcel", isPresented: Binding(

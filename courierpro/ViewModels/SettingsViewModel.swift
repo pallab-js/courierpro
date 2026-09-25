@@ -13,7 +13,10 @@ struct AppSettings: Codable {
     var defaultNotes: String = "Thank you for your business!"
     var trackingPrefix: String = "CP"
 
-    static let shared = AppSettings.load()
+    // Mutable so that save() can refresh the copy the rest of the app reads; as a
+    // `let` it was initialized once per launch and settings changes never took effect.
+    // `nonisolated(unsafe)` because it is only ever touched from the main actor.
+    nonisolated(unsafe) static var shared = AppSettings.load()
 
     static func load() -> AppSettings {
         if let data = UserDefaults.standard.data(forKey: "appSettings"),
@@ -26,6 +29,7 @@ struct AppSettings: Codable {
     func save() {
         if let data = try? JSONEncoder().encode(self) {
             UserDefaults.standard.set(data, forKey: "appSettings")
+            Self.shared = self
         }
     }
 }

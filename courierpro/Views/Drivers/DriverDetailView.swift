@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DriverDetailView: View {
     let driver: Driver
+    var onDeleted: () -> Void = {}
     @StateObject private var viewModel = DriverViewModel()
     @State private var showingEditSheet = false
     @State private var showingDeleteConfirmation = false
@@ -26,9 +27,11 @@ struct DriverDetailView: View {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
                 viewModel.deleteDriver(driver)
-                if viewModel.errorMessage == nil {
-                    dismiss()
-                }
+                guard !viewModel.showError else { return }
+                // Dismiss first so the sheet is torn down before the parent list
+                // drops the deleted model out of its array.
+                dismiss()
+                onDeleted()
             }
         } message: {
             Text("Are you sure you want to delete driver \(driver.name)? This action cannot be undone.")

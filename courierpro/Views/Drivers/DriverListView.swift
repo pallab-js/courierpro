@@ -74,7 +74,7 @@ struct DriverListView: View {
             DriverFormView(viewModel: viewModel)
         }
         .sheet(item: $viewingDriver) { driver in
-            DriverDetailView(driver: driver)
+            DriverDetailView(driver: driver, onDeleted: { viewModel.loadDrivers() })
         }
         .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
         .alert("Delete Driver", isPresented: Binding(

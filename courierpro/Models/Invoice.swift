@@ -75,6 +75,8 @@ final class Invoice {
         status: InvoiceStatus = .draft,
         subtotal: Double = 0,
         taxRate: Double = 0,
+        taxAmount: Double = 0,
+        totalAmount: Double = 0,
         notes: String? = nil,
         dueDate: Date = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date(),
         customer: Customer? = nil,
@@ -86,8 +88,8 @@ final class Invoice {
         self.statusRaw = status.rawValue
         self.subtotal = subtotal
         self.taxRate = max(0, min(taxRate, 100))
-        self.taxAmount = 0
-        self.totalAmount = 0
+        self.taxAmount = taxAmount.isFinite ? max(0, taxAmount) : 0
+        self.totalAmount = totalAmount.isFinite ? max(0, totalAmount) : 0
         self.notes = notes
         self.dueDate = dueDate
         self.customer = customer

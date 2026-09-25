@@ -137,6 +137,8 @@ final class ParcelViewModel: ObservableObject {
 
     func deleteParcel(_ parcel: Parcel) {
         do {
+            errorMessage = nil
+            showError = false
             let allItems = try persistenceService.fetch(FetchDescriptor<InvoiceItem>())
             let linkedItems = allItems.filter { item in
                 item.parcel?.id == parcel.id

@@ -22,13 +22,17 @@ struct DataBackupService {
         let drivers = try context.fetch(FetchDescriptor<Driver>())
         let invoices = try context.fetch(FetchDescriptor<Invoice>())
         let pricingRules = try context.fetch(FetchDescriptor<PricingRule>())
+        let recurringInvoices = try context.fetch(FetchDescriptor<RecurringInvoice>())
+        let statusHistories = try context.fetch(FetchDescriptor<StatusHistory>())
 
         let backup = BackupData(
             parcels: parcels.map { BackupParcel(from: $0) },
             customers: customers.map { BackupCustomer(from: $0) },
             drivers: drivers.map { BackupDriver(from: $0) },
             invoices: invoices.map { BackupInvoice(from: $0) },
-            pricingRules: pricingRules.map { BackupPricingRule(from: $0) }
+            pricingRules: pricingRules.map { BackupPricingRule(from: $0) },
+            recurringInvoices: recurringInvoices.map { BackupRecurringInvoice(from: $0) },
+            statusHistories: statusHistories.map { BackupStatusHistory(from: $0) }
         )
 
         let encoder = JSONEncoder()
@@ -155,6 +159,18 @@ struct DataBackupService {
             }
         }
 
+        for recurringData in backup.recurringInvoices {
+            let recurring = recurringData.toRecurringInvoice()
+            recurring.customer = allCustomers.first { $0.id == recurringData.customerId }
+            context.insert(recurring)
+        }
+
+        for historyData in backup.statusHistories {
+            let history = historyData.toStatusHistory()
+            history.parcel = allParcels.first { $0.id == historyData.parcelId }
+            context.insert(history)
+        }
+
         try context.save()
     }
 
@@ -214,14 +230,49 @@ struct BackupData: Codable {
     let invoices: [BackupInvoice]
     let pricingRules: [BackupPricingRule]
     let backupDate: Date
+    let recurringInvoices: [BackupRecurringInvoice]
+    let statusHistories: [BackupStatusHistory]
 
-    init(parcels: [BackupParcel], customers: [BackupCustomer], drivers: [BackupDriver], invoices: [BackupInvoice], pricingRules: [BackupPricingRule]) {
+    enum CodingKeys: String, CodingKey {
+        case parcels, customers, drivers, invoices, pricingRules, backupDate
+        case recurringInvoices, statusHistories
+    }
+
+    init(
+        parcels: [BackupParcel],
+        customers: [BackupCustomer],
+        drivers: [BackupDriver],
+        invoices: [BackupInvoice],
+        pricingRules: [BackupPricingRule],
+        recurringInvoices: [BackupRecurringInvoice] = [],
+        statusHistories: [BackupStatusHistory] = []
+    ) {
         self.parcels = parcels
         self.customers = customers
         self.drivers = drivers
         self.invoices = invoices
         self.pricingRules = pricingRules
         self.backupDate = Date()
+        self.recurringInvoices = recurringInvoices
+        self.statusHistories = statusHistories
+    }
+
+    // Backups written before recurring invoices and status history were captured must
+    // still decode, so the newer collections fall back to empty rather than throwing.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.parcels = try container.decode([BackupParcel].self, forKey: .parcels)
+        self.customers = try container.decode([BackupCustomer].self, forKey: .customers)
+        self.drivers = try container.decode([BackupDriver].self, forKey: .drivers)
+        self.invoices = try container.decode([BackupInvoice].self, forKey: .invoices)
+        self.pricingRules = try container.decode([BackupPricingRule].self, forKey: .pricingRules)
+        self.backupDate = try container.decode(Date.self, forKey: .backupDate)
+        self.recurringInvoices = try container.decodeIfPresent(
+            [BackupRecurringInvoice].self, forKey: .recurringInvoices
+        ) ?? []
+        self.statusHistories = try container.decodeIfPresent(
+            [BackupStatusHistory].self, forKey: .statusHistories
+        ) ?? []
     }
 }
 
@@ -387,6 +438,8 @@ struct BackupInvoice: Codable {
             status: InvoiceStatus(rawValue: statusRaw) ?? .draft,
             subtotal: subtotal,
             taxRate: taxRate,
+            taxAmount: taxAmount,
+            totalAmount: totalAmount,
             notes: notes,
             dueDate: dueDate ?? Date(),
             createdAt: createdAt,
@@ -493,6 +546,81 @@ struct BackupPricingRule: Codable {
             isActive: isActive,
             createdAt: createdAt,
             updatedAt: updatedAt
+        )
+    }
+}
+
+struct BackupRecurringInvoice: Codable {
+    let id: UUID
+    let name: String
+    let frequencyRaw: Int
+    let amount: Double
+    let taxRate: Double
+    let notes: String?
+    let isActive: Bool
+    let nextDueDate: Date
+    let lastGeneratedDate: Date?
+    let createdAt: Date
+    let updatedAt: Date
+    let customerId: UUID?
+
+    init(from recurring: RecurringInvoice) {
+        self.id = recurring.id
+        self.name = recurring.name
+        self.frequencyRaw = recurring.frequencyRaw
+        self.amount = recurring.amount
+        self.taxRate = recurring.taxRate
+        self.notes = recurring.notes
+        self.isActive = recurring.isActive
+        self.nextDueDate = recurring.nextDueDate
+        self.lastGeneratedDate = recurring.lastGeneratedDate
+        self.createdAt = recurring.createdAt
+        self.updatedAt = recurring.updatedAt
+        self.customerId = recurring.customer?.id
+    }
+
+    func toRecurringInvoice() -> RecurringInvoice {
+        let recurring = RecurringInvoice(
+            id: id,
+            name: name,
+            frequency: RecurrenceFrequency(rawValue: frequencyRaw) ?? .monthly,
+            amount: amount,
+            taxRate: taxRate,
+            notes: notes,
+            isActive: isActive,
+            nextDueDate: nextDueDate,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+        )
+        recurring.lastGeneratedDate = lastGeneratedDate
+        return recurring
+    }
+}
+
+struct BackupStatusHistory: Codable {
+    let id: UUID
+    let statusRaw: Int
+    let timestamp: Date
+    let notes: String?
+    let updatedBy: String?
+    let parcelId: UUID?
+
+    init(from history: StatusHistory) {
+        self.id = history.id
+        self.statusRaw = history.statusRaw
+        self.timestamp = history.timestamp
+        self.notes = history.notes
+        self.updatedBy = history.updatedBy
+        self.parcelId = history.parcel?.id
+    }
+
+    func toStatusHistory() -> StatusHistory {
+        StatusHistory(
+            id: id,
+            status: DeliveryStatus(rawValue: statusRaw) ?? .created,
+            timestamp: timestamp,
+            notes: notes,
+            updatedBy: updatedBy
         )
     }
 }

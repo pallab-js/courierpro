@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 struct InvoiceFormView: View {
     @ObservedObject var viewModel: InvoiceViewModel
@@ -115,23 +114,9 @@ struct InvoiceFormView: View {
     }
 
     private func loadData() async {
-        let customerViewModel = CustomerViewModel()
-        customerViewModel.loadCustomers()
-        availableCustomers = customerViewModel.customers
-
-        let parcelViewModel = ParcelViewModel()
-        parcelViewModel.loadParcels()
-
-        let itemDescriptor = FetchDescriptor<InvoiceItem>()
-        let existingItems: [InvoiceItem]
-        do {
-            existingItems = try PersistenceService.shared.fetch(itemDescriptor)
-        } catch {
-            existingItems = []
-        }
-        let invoicedParcelIds = Set(existingItems.compactMap { $0.parcel?.id })
-
-        availableParcels = parcelViewModel.parcels.filter { $0.status == .delivered && !invoicedParcelIds.contains($0.id) }
+        let data = viewModel.loadInvoiceFormData()
+        availableCustomers = data.customers
+        availableParcels = data.parcels
         isLoadingData = false
     }
 

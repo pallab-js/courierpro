@@ -84,7 +84,7 @@ struct InvoiceListView: View {
             InvoiceFormView(viewModel: viewModel)
         }
         .sheet(item: $viewingInvoice) { invoice in
-            InvoiceDetailView(invoice: invoice)
+            InvoiceDetailView(invoice: invoice, onDeleted: { viewModel.loadInvoices() })
         }
         .errorAlert(isPresented: $viewModel.showError, message: viewModel.errorMessage)
         .alert("Delete Invoice", isPresented: Binding(
